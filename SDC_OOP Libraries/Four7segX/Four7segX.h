@@ -38,26 +38,25 @@ Ref:
 //LED birightness is dimed in night time, by off the digit for this duration[ms]
 #define NIGHT_BRIGHTNESS_DELAY 3
 
-//----------------------------------------------
-//--- Global variable declared at Arduino sketch "globals" file
-//--- Using global var is NOT recommended to maintain debug-friendly code. Use with much caution!
-//----------------------------------------------
-// set by RTX.readDS3231time member function
-extern bool gNightMode;
-// set by RTX.readDS3231time member function
-extern byte gSingleDigitDelay;
 
 class Four7segX
 {
 public:
-	Four7segX(byte A, byte B, byte C, byte D, byte E, byte F, byte G, byte DP,
-				byte digitOnes, byte digitTens, byte digitHundreds, byte digitKilos); // May 6, 2019 (int type makes Arduino comile-time error  
-	
+	Four7segX(byte A, byte B, byte C, byte D, byte E, byte F, byte G, byte DP);
+	void setNumDigits(byte num);
+	byte getNumDigits();
+	void setPinDigits(byte* digitPins);
+
 	void disp4digits(trippleX* X, int num, byte pos, byte duration);
     void disp4chars(trippleX* X, char* str, int duration);
 	void disp4digits_UpsideDown(trippleX* X, int num, int pos, int duration);
 
-	bool nightMode;// true to dim the brightness of 7 segment LED
+	void setSingleDigitDelay(byte num);
+	byte getSingleDigitDelay();
+
+	void setNightMode(bool mode);
+	bool getNightMode();
+	
     
 private:
 	int simplePow(byte base, byte num);			
@@ -65,14 +64,19 @@ private:
     byte getTopX_Num(byte* numArray, byte num);
     byte getTopX_ABC(char C);
 
-   
     byte _A, _B, _C, _D, _E, _F, _G, _DP; // segment control pin
-
+	byte _numDigits; //number of disits in multiple-digit 7 segment LED
+	
+	/*
 	byte _digitOnes;		// Units(1s) digit control pin
 	byte _digitTens;		// Tens(10s) digit control pin
 	byte _digitHundreds;  // Hundres(100s) digit control pin
 	byte _digitKilos;		// Kilo(1000s) digit control pin
+	*/
+	byte _digitPins[MAXDIG7SEG];
 
+	byte _singleDigitDelay;
+	bool _nightMode;// true to dim the brightness of 7 segment LED   
     
     //----------------------------------------------
     //--- bit assignments for 7 segment LED

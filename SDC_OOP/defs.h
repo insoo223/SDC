@@ -6,6 +6,9 @@
 
   Updated on 10/29/15
 */
+#define _7SEG_NUM_DIGITS 4
+#define _7SEG_SINGLE_DIGIT_DELAY 4
+
 #define BWD_DURATION 200 // [ms]
 
 #define RECT_TURN_DURATION 300 
@@ -41,4 +44,3 @@
 #define BLANK4CHAR                      "    "
 #define STR_DONE                        "DONE"
 #define STR_ALL_DONE                    "ALDN"
-

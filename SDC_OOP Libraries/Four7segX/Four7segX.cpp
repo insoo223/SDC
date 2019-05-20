@@ -25,8 +25,10 @@ Ref:
 #include "Four7segX.h"
 
 
-Four7segX :: Four7segX(byte A, byte B, byte C, byte D, byte E, byte F, byte G, byte DP,
-					   byte digitOnes, byte digitTens, byte digitHundreds, byte digitKilos) // May 6, 2019 
+Four7segX :: Four7segX(byte A, byte B, byte C, byte D, byte E, byte F, byte G, byte DP)
+//					   byte digitOnes, byte digitTens, byte digitHundreds, byte digitKilos) // May 6, 2019 
+//Four7segX :: Four7segX(byte A, byte B, byte C, byte D, byte E, byte F, byte G, byte DP,
+//					   byte digitOnes, byte digitTens, byte digitHundreds, byte digitKilos) // May 6, 2019 
 {
     _7segABC_Num[0] = 0b00111111; // DP_IDXGFEDCBA
     _7segABC_Num[1] = 0b00000110;
@@ -85,11 +87,13 @@ Four7segX :: Four7segX(byte A, byte B, byte C, byte D, byte E, byte F, byte G, b
     
     //_A=0; _B=2; _C=6; _D=4; _E=3; _F=1; _G=7; _DP=5;
 	_A=A; _B=B; _C=C; _D=D; _E=E; _F=F; _G=G; _DP=DP;
+	/*
 	_digitOnes = digitOnes;
     _digitTens = digitTens, 
 	_digitHundreds = digitHundreds;
     _digitKilos = digitKilos, 
-		
+	*/
+
     _74HC595pin[0] = _A;
     _74HC595pin[1] = _B;
     _74HC595pin[2] = _C;
@@ -99,10 +103,45 @@ Four7segX :: Four7segX(byte A, byte B, byte C, byte D, byte E, byte F, byte G, b
     _74HC595pin[6] = _G;
     _74HC595pin[7] = _DP;
 
-	nightMode = false;
+	_nightMode = false;
     
 }//Four7segX
 
+void Four7segX :: setNumDigits(byte num)
+{
+	_numDigits = num;
+}//setNumDigits
+
+byte Four7segX :: getNumDigits()
+{
+	return(_numDigits);
+}//getNumDigits
+
+void Four7segX :: setPinDigits(byte* digitPins) // May 9, 2019 
+{
+	byte i;
+
+	for(i=0; i<_numDigits; i++)
+		_digitPins[i] = digitPins[i];
+}//setNumDigits
+
+void Four7segX :: setSingleDigitDelay(byte num)
+{
+	_singleDigitDelay = num;
+}//setSingleDigitDelay
+byte Four7segX :: getSingleDigitDelay()
+{
+	return(_singleDigitDelay);
+}//getSingleDigitDelay
+
+void Four7segX :: setNightMode(bool mode)
+{
+	_nightMode = mode;
+}//setNightMode
+bool Four7segX :: getNightMode()
+{
+	return(_nightMode);
+}//getNightMode
 
 /*----------------------------------------------------------
 Function Name: 
@@ -161,11 +200,13 @@ Input Arguments:
 Output Arguments: 
 	None
 Updated: 
-	May 8, 2019
+	May 9, 2019
 Created: 
 	May 8, 2019
 Advantage:
-	Regardless of how many digits of 7 segment LED, you can easily adapt its function by changing the constant "MAXDIG7SEG" 
+	Regardless of how many digits of 7 segment LED, you can easily adapt its function 
+		by changing the class var. "_numDigits" by calling setNumDigits (as of May 9, 2019)
+		by changing the constant "MAXDIG7SEG" (as of May 8, 2019)
 Limitation:
 	Still, the manual & fixed routine to decompose an integer,found in "disp4digits_legacy" of a previou version is less footprint size
 	Harder to get it than the manual routine.
@@ -186,12 +227,12 @@ void  Four7segX :: decomposeNum(int num, byte* eachDigit)
     ones=num % 10;
 	*/
 	// Loop to determine each digit (May 6, 2019)
-	for (i=0; i<MAXDIG7SEG; i++)
+	for (i=0; i<_numDigits; i++)
 	{
-		arrEle = MAXDIG7SEG-1-i;
+		arrEle = _numDigits-1-i;
 		if (i == 0) // MSB position
 			val = num;
-		else if (i == MAXDIG7SEG-1) // LSB position
+		else if (i == _numDigits-1) // LSB position
 			val = num % 10;
 		else
 		{
@@ -245,12 +286,15 @@ Limitation:
 		_7X.disp4digits(5678,0, 40); // HEX size: 3172 bytes using decimalPow, 5138 bytes using Arduino std pow
 		_7X.disp4digits_legacy(5678,0, 40); // HEX size: 2868 bytes
 Ref:
+	malloc() not recommended in an embedded system
+		https://arduino.stackexchange.com/questions/682/is-using-malloc-and-free-a-really-bad-idea-on-arduino
 	Arduino power fuction https://www.arduino.cc/reference/en/language/functions/math/pow/
 ----------------------------------------------------------*/
 void Four7segX :: disp4digits(trippleX* X,int num, byte pos, byte duration)
 {
     //Decomposition of input arg."num"
 	byte eachDigit[MAXDIG7SEG]; //array element 0 for 10^0, 1 for 10^1, 2 for 10^2, 3 for 10^3
+	//byte *eachDigit;
 	int val;
 	byte k;
 	byte p;
@@ -258,7 +302,11 @@ void Four7segX :: disp4digits(trippleX* X,int num, byte pos, byte duration)
 
     //Byte pattern of 74HC595 parallel pins
 	byte num74HC595[MAXNUM74HC595]; //array element 0 for botX, 1 for midX, 2 for topX 
-    
+
+	//eachDigit = malloc(sizeof(byte) * (_numDigits*2));
+	//for(k=0; k<MAXDIG7SEG; k++)
+	//	eachDigit[k]=0;
+
 	//Get the number for each digit position
 	decomposeNum(num, eachDigit);
     
@@ -275,13 +323,14 @@ void Four7segX :: disp4digits(trippleX* X,int num, byte pos, byte duration)
 	num74HC595[MAXNUM74HC595-3] = 0;
 	X->ctrlAll(num74HC595);
 	*/
-	X->ctrlAll_legacy (0x00, _BV(_digitKilos), num74HC595[0]);
+	//X->ctrlAll_legacy (0x00, _BV(_digitKilos), num74HC595[0]);
+	X->ctrlAll_legacy (0x00, _BV(_digitPins[MAXNUM74HC595-1]), num74HC595[MAXNUM74HC595-2]);
     
-	//display 1 to MAXDIG7SEG digit on 7 segment LED
+	//display 1 to _numDigits digit on 7 segment LED
 	for(k=0; k<duration; k++)
     {
 		//display each digit of 7 segment LED
-		for(n=0; n<MAXDIG7SEG; n++)
+		for(n=0; n<_numDigits; n++)
 		{
 
 			num74HC595[MAXNUM74HC595-1] = getTopX_Num(_7segABC_Num, eachDigit[n]);
@@ -290,8 +339,8 @@ void Four7segX :: disp4digits(trippleX* X,int num, byte pos, byte duration)
 			val=0;
 			if (n>0)
 			{
-				for(p=0; p<MAXDIG7SEG-n+1; p++)
-					val += eachDigit[MAXDIG7SEG-p];
+				for(p=0; p<_numDigits-n+1; p++)
+					val += eachDigit[_numDigits-p];
 
 				if (val == 0)
 					num74HC595[MAXNUM74HC595-1] = getTopX_Num(_7segABC_Num, BLANK_IDX);
@@ -305,19 +354,21 @@ void Four7segX :: disp4digits(trippleX* X,int num, byte pos, byte duration)
 
 			X->ctrlAll_legacy (num74HC595[MAXNUM74HC595-1], _BV(n) | num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
 			
-			if (nightMode)
+			if (_nightMode)
 			{
 				X->ctrlAll_legacy (num74HC595[MAXNUM74HC595-1], ~_BV(n) & num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
 				delay(NIGHT_BRIGHTNESS_DELAY);
 			}
 
-			delay(gSingleDigitDelay);
+			delay(_singleDigitDelay);
 		}//for n
 
 	}//for k
 
     //eliminate a remnant display in K-unit
-	X->ctrlAll_legacy(0,_BV(_digitKilos)  | num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
+	//X->ctrlAll_legacy(0,_BV(_digitKilos)  | num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
+	X->ctrlAll_legacy(0,_BV(_digitPins[MAXNUM74HC595-1])  | num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
+	
 }//disp4digits
 
 
@@ -369,23 +420,24 @@ void Four7segX :: disp4chars(trippleX* X, char* str, int duration)
     for (k=0; k<duration; k++)
     {
 		//display each char of 7 segment LED
-		for(n=0; n<MAXDIG7SEG; n++)
+		for(n=0; n<_numDigits; n++)
 		{
-			num74HC595[MAXNUM74HC595-1] = getTopX_ABC(str[MAXDIG7SEG-1-n]);
+			num74HC595[MAXNUM74HC595-1] = getTopX_ABC(str[_numDigits-1-n]);
 			X->ctrlAll_legacy (num74HC595[MAXNUM74HC595-1], _BV(n) | num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
 
-			if (nightMode)
+			if (_nightMode)
 			{
 				X->ctrlAll_legacy (num74HC595[MAXNUM74HC595-1], ~_BV(n) & num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
 				delay(NIGHT_BRIGHTNESS_DELAY);
 			}
 
-			delay(gSingleDigitDelay);
+			delay(_singleDigitDelay);
 		}//for n
     }//for k
 
 	//eliminate a remnant display in K-unit
-    X->ctrlAll_legacy(0,_BV(_digitKilos)  | num74HC595[1], num74HC595[0]);
+    //X->ctrlAll_legacy(0,_BV(_digitKilos)  | num74HC595[1], num74HC595[0]);
+	X->ctrlAll_legacy(0,_BV(_digitPins[MAXNUM74HC595-1])  | num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
 }//disp4chars
 
 /*----------------------------------------------------------
@@ -424,18 +476,23 @@ Limitation:
 Ref:
 	Arduino power fuction https://www.arduino.cc/reference/en/language/functions/math/pow/
 ----------------------------------------------------------*/
+
 void Four7segX :: disp4digits_UpsideDown(trippleX* X, int num, int pos, int duration)
 {
     //Decomposition of input arg."num"
 	byte eachDigit[MAXDIG7SEG]; //array element 0 for 10^0, 1 for 10^1, 2 for 10^2, 3 for 10^3
+	//byte *eachDigit;
 	int val;
 	byte k;
 	byte p;
 	byte n;
-
     //Byte pattern of 74HC595 parallel pins
 	byte num74HC595[MAXNUM74HC595]; //array element 0 for botX, 1 for midX, 2 for topX 
     
+	//eachDigit = malloc(sizeof(byte) * (_numDigits+1));//HEX 3130 -> 3664 by using malloc than fixed array
+	//for(k=0; k<_numDigits+1; k++)
+	//	eachDigit[k]=0;
+
 	//Get the number for each digit position
 	decomposeNum(num, eachDigit);
     
@@ -450,7 +507,7 @@ void Four7segX :: disp4digits_UpsideDown(trippleX* X, int num, int pos, int dura
 	for(k=0; k<duration; k++)
     {
 		//display each digit of 7 segment LED
-		for(n=0; n<MAXDIG7SEG; n++)
+		for(n=0; n<_numDigits; n++)
 		{
 
 			num74HC595[MAXNUM74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, eachDigit[n]);
@@ -460,8 +517,8 @@ void Four7segX :: disp4digits_UpsideDown(trippleX* X, int num, int pos, int dura
 			val=0;
 			if (n<MAXNUM74HC595-1)
 			{
-				for(p=0; p<MAXDIG7SEG-n+1; p++)
-					val += eachDigit[MAXDIG7SEG-1-p];
+				for(p=0; p<_numDigits-n+1; p++)
+					val += eachDigit[_numDigits-1-p];
 
 				if (val == 0)
 					num74HC595[MAXNUM74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, BLANK_IDX);
@@ -473,15 +530,15 @@ void Four7segX :: disp4digits_UpsideDown(trippleX* X, int num, int pos, int dura
 				num74HC595[MAXNUM74HC595-1] |= getTopX_Num(_7segABC_Num_UpsideDown, DP_IDX);
 
 
-			X->ctrlAll_legacy (num74HC595[MAXNUM74HC595-1], _BV(MAXDIG7SEG-1-n) | num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
+			X->ctrlAll_legacy (num74HC595[MAXNUM74HC595-1], _BV(_numDigits-1-n) | num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
 
-			if (nightMode)
+			if (_nightMode)
 			{
 				X->ctrlAll_legacy (num74HC595[MAXNUM74HC595-1], ~_BV(n) & num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
 				delay(NIGHT_BRIGHTNESS_DELAY);
 			}
 
-			delay(gSingleDigitDelay);
+			delay(_singleDigitDelay);
 		}//for n
 
 	}//for k

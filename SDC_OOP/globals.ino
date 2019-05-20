@@ -12,4 +12,4 @@
 
 //byte gPos74HC595[MAXNUM74HC595];
 //bool gNightMode=false;
-byte gSingleDigitDelay=4;
+//byte gSingleDigitDelay=4;

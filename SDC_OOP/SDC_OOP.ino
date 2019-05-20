@@ -35,7 +35,11 @@ trippleX X(6, 7, 8); //Arduino Pro Mini digital pins assigned to latch, clock, d
 // i.e.       A, B, C, D, E, F, G,DP,D4,D3,D2,D1 <--- connected to 4digit-7segment LED
 //           QA,QC,QG,QE,QD,QB,QH,QF,            <--- connected to Top 74HC595 or num74HC595[MAXDIG7SEG-1]
 //                                   QA,QB,QC,QD <--- connected to Mid 74HC595 or num74HC595[MAXDIG7SEG-2]
-Four7segX _7X(0, 2, 6, 4, 3, 1, 7, 5, 0, 1, 2, 3); //depends on the HW schematic
+//Four7segX _7X(0, 2, 6, 4, 3, 1, 7, 5, 0, 1, 2, 3); //depends on the HW schematic (as of May 8, 2019)
+Four7segX _7X(0, 2, 6, 4, 3, 1, 7, 5); //(as of May 9, 2019)
+//           QA,QC,QG,QE,QD,QB,QH,QF            <--- connected to Top 74HC595 or num74HC595[MAXDIG7SEG-1]
+byte pinDigits[_7SEG_NUM_DIGITS] = {0, 1, 2, 3}; //(as of May 9, 2019)
+//                                  QA,QB,QC,QD <--- connected to Mid 74HC595 or num74HC595[MAXDIG7SEG-2]
 
 byte pos74HC595[MAXDIG7SEG];
 /*
@@ -51,6 +55,10 @@ UXX ux;
 */
 void setup()
 {
+  _7X.setNumDigits(_7SEG_NUM_DIGITS);
+  _7X.setPinDigits(pinDigits);
+  _7X.setSingleDigitDelay(_7SEG_SINGLE_DIGIT_DELAY);
+  
   //Set time to DS3231 RTC module
   //rt.setDS3231time(30,35,11,5,19,5,17);
 
@@ -69,8 +77,8 @@ void loop()
   //Production-time code requires only the following single statement!
   //To test SDC_tandem328P for it has NO RTC
   //   so that, night time brightness cannot be controlled.
-  //_7X.nightMode = true;
-  _7X.nightMode = false;
+  _7X.setNightMode(false);
+  //_7X.setNightMode(true);
   //menu.selectOpMode();
 
   //-------- Test------------------
@@ -82,7 +90,6 @@ void loop()
   //test_DHT11X();
   //test_RTX();
   //test_L293DX();
-  //----- SDC OOP Tested upto funtions below (Wed May 8, 2019) -----
   //test_trippleX_7segNum_UpsideDown();
   //test_trippleX_7segChar();
   test_trippleX_7segNum();
