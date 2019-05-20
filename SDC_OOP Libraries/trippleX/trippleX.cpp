@@ -1,28 +1,43 @@
-/*
- 
- trippleX.cpp
- SDC
- 
- Created by In soo Kim on 10/24/15.
- Release to Public domain
- 
- Updated on 10/29/15
-*/
+/*----------------------------------------------------------
+File Name: 
+	trippleX.cpp
+Purpose: 
+	Control 4 digits 7 segment LED on tripple 74HC595
+Updated: 
+	May 06, 2019 (Mon) - parameterized 74HC595 pins for constructor  
+		1) Four7segX(); --> Four7segX(byte A, byte B, byte C, byte D, byte E, byte F, byte G, byte DP,
+				byte digitOnes, byte digitTens, byte digitHundreds, byte digitKilos); 
+		2) #define DIGIT_K_PIN 3 --> byte _digitKilos; (as well as other digit pins)
+	Oct 29, 2015 - optimization 1st round
+Created: 
+	By Insoo Kim (insoo@hotmail.com) on Oct 24, 2015
+Advantage:
+Limitation:
+Ref:
+----------------------------------------------------------*/
 
 #include "Arduino.h"
 #include "trippleX.h"
 
 
 //-----------------------------------------------
-trippleX :: trippleX()
+//trippleX :: trippleX()
+trippleX :: trippleX(byte latchPin, byte clockPin, byte dataPin)
 {
-    _l = LATCHpin;
-    _c = CLOCKpin;
-    _d = DATApin;
+    _l = latchPin;
+    _c = clockPin;
+    _d = dataPin;
 
     pinMode(_l,OUTPUT);
     pinMode(_c,OUTPUT);
     pinMode(_d,OUTPUT);
+
+	//for (byte i=0; i<MAXNUM74HC595; i++)
+	//	_curX[i] = 0;
+	_curX[0] = 0;
+	_curX[1] = 0;
+	_curX[2] = 0;
+
 }//trippleX
 
 //-----------------------------------------------
@@ -36,16 +51,39 @@ void trippleX :: updateX(uint8_t topX, uint8_t midX, uint8_t botX)
 
 //-----------------------------------------------
 // get the most current top, middle, and bottom bytes of tripple 74HC595s
-void trippleX :: getCurrentX(uint8_t *topX, uint8_t *midX, uint8_t *botX)
+//void trippleX :: getCurrentX(uint8_t *topX, uint8_t *midX, uint8_t *botX)
+void trippleX ::getCurrentX(byte *pos74HC595)
+{
+	for (byte i=0; i<MAXNUM74HC595; i++)
+		pos74HC595[i] = _curX[i];
+}//getCurrentX
+
+//-----------------------------------------------
+// get the most current top, middle, and bottom bytes of tripple 74HC595s
+void trippleX ::getCurrentX_legacy(uint8_t *topX, uint8_t *midX, uint8_t *botX)
 {
     *topX = gCurTopX;
     *midX = gCurMidX;
     *botX = gCurBotX;
-}//getCurrentX
+}//getCurrentX_legacy
+//-----------------------------------------------
+// byte-oriented control for 74HC595
+//void trippleX :: ctrlAll(uint8_t topX, uint8_t midX, uint8_t botX)
+void trippleX :: ctrlAll(byte *pos74HC595)
+{
+	byte i;
+    
+	digitalWrite(_l, LOW);
+	for(i=0; i<MAXNUM74HC595; i++)
+		shiftOut(_d, _c, MSBFIRST, pos74HC595[i]);
+    digitalWrite(_l, HIGH);
+    
+    //updateX(topX, midX, botX); //if execute, remnant display on K-unit
+}//ctrlAll
 
 //-----------------------------------------------
 // byte-oriented control for 74HC595
-void trippleX :: ctrlAll(uint8_t topX, uint8_t midX, uint8_t botX)
+void trippleX :: ctrlAll_legacy(uint8_t topX, uint8_t midX, uint8_t botX)
 {
     digitalWrite(_l, LOW);
     shiftOut(_d, _c, MSBFIRST, botX);
@@ -54,8 +92,7 @@ void trippleX :: ctrlAll(uint8_t topX, uint8_t midX, uint8_t botX)
     digitalWrite(_l, HIGH);
     
     //updateX(topX, midX, botX); //if execute, remnant display on K-unit
-}//ctrlAll
-
+}//ctrlAll_legacy
 //-----------------------------------------------
 // bit-oriented control for 74HC595
 // Control three 74HC595 output eXpansion chips
@@ -110,7 +147,7 @@ void trippleX :: ctrlSingle(uint8_t ctrlID, uint8_t state)
     //update the current bytes of tripple 74HC595s
     updateX(topByte, middleByte, bottomByte);
             
-    ctrlAll(gCurTopX, gCurMidX, gCurBotX);
+    ctrlAll_legacy(gCurTopX, gCurMidX, gCurBotX);
 
 }//ctrlSingle
 

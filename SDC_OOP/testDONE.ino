@@ -5,14 +5,16 @@
   Updated: Oct 29, 2015
   Author: Insoo Kim (insoo@hotmail.com)
 -------------------------------------------- */
-
+//extern trippleX X;
 //-------------------------------------------
 void dispGlobals(int duration)
 {
+    /*
     Serial.print(gCurTopX); Serial.print(", "); 
     Serial.print(gCurMidX); Serial.print(", "); 
     Serial.println(gCurBotX); 
     delay(duration);
+    */
 }//dispGlobals
 
 //-------------------------------------------
@@ -22,11 +24,11 @@ void test_trippleX()
 {
   for (int i=0; i<4; i++)
   {
-    X.ctrlAll(0x5, 1<<i, 0);
+    X.ctrlAll_legacy(0x5, 1<<i, 0);
     dispGlobals(1000);
   }
   
-  X.ctrlAll(0,0,0); //0,0,0
+  X.ctrlAll_legacy(0,0,0); //0,0,0
   dispGlobals(1000);
   
   X.ctrlSingle(0x20,HIGH); //1,0,0
@@ -45,26 +47,30 @@ void test_trippleX()
 // Seen from the car rear side(default aspect). Display from 0 to 9999. Takes time.
 void test_trippleX_7segNum()
 {
-
+  //_7X.disp4digits(&X,5678,0, 40); // HEX size: 3172 bytes using decimalPow, 5138 bytes using Arduino std pow
+  //_7X.disp4digits_legacy(5678,0, 40); // HEX size: 2868 bytes
   for (int i=0; i<10000; i++)
-    _7X.disp4digits(i,0, 20);
+    _7X.disp4digits(&X, i, 0x00, 20); // 3rd arg. is for DP (0x00: No DP, 0x01: Ones, 0x02: Tens, 0x04: H, 0x08: K)
+                        // HEX size: 3134 bytes using the pointer of a Class instance in my library
+                        // HEX size: 3062 bytes using iteration in "Four7segX :: disp4digits" function
+    //_7X.disp4digits(i, 0, 50);
 }//test_trippleX_7segNum
 
 //-------------------------------------------
 // Display from A to Z and some movement action defined by Insoo
 void test_trippleX_7segChar()
-{
-  _7X.disp4chars("ABCD", 200);
-  _7X.disp4chars("EFGH", 200);
-  _7X.disp4chars("IJKL", 200);
-  _7X.disp4chars("MNOP", 200);
-  _7X.disp4chars("QRST", 200);
-  _7X.disp4chars("UVWX", 200);
-  _7X.disp4chars("YZAB", 200);
-  _7X.disp4chars(" FWD", 200); //forward
-  _7X.disp4chars(" BWD", 200); //backward
-  _7X.disp4chars("TNCK", 200); //turn clockwise
-  _7X.disp4chars("TNAC", 200); //turn anti-clockwise
+{ 
+  _7X.disp4chars(&X, "ABCD", 100); // legacy 2920, iteration 2572
+  _7X.disp4chars(&X, "EFGH", 100);
+  _7X.disp4chars(&X, "IJKL", 100);
+  _7X.disp4chars(&X, "MNOP", 100);
+  _7X.disp4chars(&X, "QRST", 100);
+  _7X.disp4chars(&X, "UVWX", 100);
+  _7X.disp4chars(&X, "YZAB", 100);
+  _7X.disp4chars(&X, " FWD", 100); //forward
+  _7X.disp4chars(&X, " BWD", 100); //backward
+  _7X.disp4chars(&X, "TNCK", 100); //turn clockwise
+  _7X.disp4chars(&X, "TNAC", 100); //turn anti-clockwise
 }//test_trippleX_7segChar
 
 //-------------------------------------------
@@ -72,9 +78,10 @@ void test_trippleX_7segChar()
 void test_trippleX_7segNum_UpsideDown()
 {
   for (int i=0; i<10000; i++)
-    _7X.disp4digits_UpsideDown(i,0, 20);
+    _7X.disp4digits_UpsideDown(&X, i, 0x00, 50);
 }//test_trippleX_7segNum_UpsideDown
 
+/***************************
 //-------------------------------------------
 // L293D Motor driver
 //-------------------------------------------
@@ -91,7 +98,9 @@ void test_L293DX_bwd()
   motor.bwd(2000);
   motor.stop(1000);
 }//test_L293DX_bwd
+***************************/
 
+/***************************
 //-------------------------------------------
 void test_L293DX()
 {
@@ -141,7 +150,10 @@ void test_L293DX()
   _7X.disp4chars(STR_STOP, 100);
   motor.stop(1000);
 }//test_L293DX
+***************************/
 
+
+/***************************
 //-------------------------------------------
 // Real-time clock with DS3231 chip
 //-------------------------------------------
@@ -156,6 +168,9 @@ void test_DHT11X()
 {
   dht11.displayTempHumidity(2000);
 }//test_DHT11X
+***************************/
+
+/***************************
 //-------------------------------------------
 // single CD4021BE input expansion chip
 //-------------------------------------------
@@ -223,5 +238,7 @@ void test_IRX_runSDC()
 }//test_IRX_runSDC
 //-------------------------------------------
 //-------------------------------------------
+***************************/
+
 /*********** test functions
 test functions ************/
