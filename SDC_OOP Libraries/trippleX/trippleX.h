@@ -1,30 +1,27 @@
-/*
-  trippleX.h
-  SDC
-
-  Created by In soo Kim on 10/24/15.
-  Control tripple 74HC595 output expansion chips
- 
-  Release to Public domain
-
- Updated on 10/29/15
-*/
+/*----------------------------------------------------------
+File Name: 
+	trippleX.h
+Purpose: 
+	Control tripple 74HC595 output expansion chips
+Updated: 
+	May 06, 2019 (Mon) - parameterized 74HC595 pins for constructor  
+		1) Four7segX(); --> Four7segX(byte A, byte B, byte C, byte D, byte E, byte F, byte G, byte DP,
+				byte digitOnes, byte digitTens, byte digitHundreds, byte digitKilos); 
+		2) #define DIGIT_K_PIN 3 --> byte _digitKilos; (as well as other digit pins)
+	Oct 29, 2015 - optimization 1st round
+Created: 
+	By Insoo Kim (insoo@hotmail.com) on Oct 24, 2015
+Advantage:
+Limitation:
+Ref:
+----------------------------------------------------------*/
 
 #ifndef trippleX_h
 #define trippleX_h
 
 #include "Arduino.h"
 
-//----------------------------------------------
-//--- Pin assignments to direct pins of Arduino
-//----------------------------------------------
-#define LATCHpin 6
-#define CLOCKpin 7
-#define DATApin  8
-
-//----------------------------------------------
-//--- Pin assignments for tripple 74HC595s
-//----------------------------------------------
+#define MAXNUM74HC595 3 //number of 74HC595 chips used for SDC
 
 // Bit location of 74HC595 sector
 // A "sector" tells which of three 74HC595 chips holds a corresponding signal: top, middle, or bottom
@@ -39,13 +36,16 @@ extern uint8_t gCurTopX, gCurMidX, gCurBotX;
 class trippleX
 {
 public:
-    trippleX();
+	trippleX(byte latchPin, byte clockPin, byte dataPin);
     void updateX(uint8_t topX, uint8_t midX, uint8_t botX);
-    void getCurrentX(uint8_t *topX, uint8_t *midX, uint8_t *botX);
-    void ctrlAll(uint8_t topX, uint8_t midX, uint8_t botX);
+	void getCurrentX(byte *pos74HC595);
+    void getCurrentX_legacy(uint8_t *topX, uint8_t *midX, uint8_t *botX);
+	void ctrlAll(byte *pos74HC595);
+    void ctrlAll_legacy(uint8_t topX, uint8_t midX, uint8_t botX);
     void ctrlSingle(uint8_t ctrlID, uint8_t state);
 private:
     uint8_t _l, _c, _d;
+	byte _curX[MAXNUM74HC595]; // May 8, 2019 (@ed) - Migrate from External var. to Private Class Members
 };
 
 
