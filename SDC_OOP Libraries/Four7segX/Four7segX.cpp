@@ -4,9 +4,13 @@ File Name:
 Purpose: 
 	Control 4 digits 7 segment LED on tripple 74HC595
 Updated: 
+	May 16, 2019 (Thu) - OOP Simplification Stage #03
+		1) Moved "setSingleChipSinglePin595" function to trippleX.cpp & h. 
+			For trippleX deals with chip operations of 74HC595, so that the function is reasonably cared by the tripplX class.
+			HEX size of Arduino has been shrunken from 3464 to 3302 bytes. A good advantage!
 	May 15, 2019 (Wed) - OOP Simplification Stage #02
 		1) Modified "dispAllSegs" function to accomodate newly structured "_segPin" array elements which has chipID as well as pinID.
-		2) Detached "dispSdigit" function from "dispMdigits", and looks more neat and tidy.
+		2) Detached "dispSdigitChar" function from "dispMdigits", and looks more neat and tidy.
 	May 14, 2019 (Tue) - OOP Simplification Stage #01
 		1) Successfully created "dispMdigits" function to replace "disp4digits". 
 			The former is better structured and scalable.
@@ -295,10 +299,9 @@ void Four7segX :: dispAllSegs(trippleX* X, byte numUnit)
   }
 }// dispAllSegs  
 
-
 /*----------------------------------------------------------
 Function Name: 
-	setChip595
+	setSingleNum595pattern
 Purpose: 
 	Display an integer on 4 (or multiple) digits 7segment LED of common cathode type.
 How to:
@@ -306,60 +309,20 @@ How to:
 	2. 
 	3. 
 Arguments:
-	Output
-		byte* getGroup595pattern - byte array for multiple 74HC595
 	Input
 		trippleX* X - Class instance for multiple 74HC595
 		byte* segVal - Array of segment values for numbers
 		byte num - Number to be displayed on a sigle digit 
+		byte digit - digit position of 4 (or multiple) digits 7segment LED 
+		byte dispMode - display direction or mode(number or char.)
 Updated: 
-	May 8, 2019 (Wed)
+	May 16, 2019 (Thu)
 Created: 
 	May 13, 2019 (Mon)
 Limitation:
 Ref:
 ----------------------------------------------------------*/
-void Four7segX :: setChip595 (trippleX* X, byte chipID, byte pinID, byte val)
-{
-	byte grp595[MAXCHIP74HC595]; //Byte pattern of parallel pins of each 74HC595 chip
-								//array element MAXCHIP74HC595-1 for topX, MAXCHIP74HC595-2 for midX, MAXCHIP74HC595-3 for  botX
-								//array element 2 for topX, 1 for midX, 0 for botX, if using three 74HC595 chips.   
-	X->getCurrentX(grp595);
-
-	if (val == 1)
-		grp595[MAXCHIP74HC595-chipID] |= _BV(pinID);
-		//grp595[MAXCHIP74HC595-chipID] = _BV(pinID);
-	else
-		grp595[MAXCHIP74HC595-chipID] &= ~_BV(pinID);
-		//grp595[MAXCHIP74HC595-chipID] = ~_BV(pinID);
-
-	X->updateX(grp595);
-}//setChip595
-
-/*----------------------------------------------------------
-Function Name: 
-	getGroup595pattern
-Purpose: 
-	Display an integer on 4 (or multiple) digits 7segment LED of common cathode type.
-How to:
-	1. 
-	2. 
-	3. 
-Arguments:
-	Output
-		byte* getGroup595pattern - byte array for multiple 74HC595
-	Input
-		trippleX* X - Class instance for multiple 74HC595
-		byte* segVal - Array of segment values for numbers
-		byte num - Number to be displayed on a sigle digit 
-Updated: 
-	May 8, 2019 (Wed)
-Created: 
-	May 13, 2019 (Mon)
-Limitation:
-Ref:
-----------------------------------------------------------*/
-void Four7segX :: setGroup595pattern (trippleX* X, byte* segVal, byte num, byte digit, byte dispMode)
+void Four7segX :: setSingleNum595pattern (trippleX* X, byte* segVal, byte num, byte digit, byte dispMode)
 {
 	byte i;
 	byte chip595;
@@ -371,9 +334,11 @@ void Four7segX :: setGroup595pattern (trippleX* X, byte* segVal, byte num, byte 
 		chip595 = (_segPins[i] >> SECTOR_BIT_LOCATION_74HC595) & 0x0F;
 		pin595 = _segPins[i] & 0x0F;
 		if ( ( (segVal[num] >> i) & 0x01) == 1)
-			setChip595(X, chip595, pin595, 1);
+			X->setSingleChipSinglePin595(chip595, pin595, 1);
+			//setSingleChipSinglePin595(X, chip595, pin595, 1);
 		else
-			setChip595(X, chip595, pin595, 0);
+			X->setSingleChipSinglePin595(chip595, pin595, 0);
+			//setSingleChipSinglePin595(X, chip595, pin595, 0);
 
 	}
 	
@@ -382,17 +347,18 @@ void Four7segX :: setGroup595pattern (trippleX* X, byte* segVal, byte num, byte 
 		digit = MAXDIG7SEG - 1 - digit;
 	chip595 = (_digitPins[digit] >> SECTOR_BIT_LOCATION_74HC595) & 0x0F;
 	pin595 = _digitPins[digit] & 0x0F;
-	setChip595(X, chip595, pin595, 1);
-}//setGroup595pattern
+	//setSingleChipSinglePin595(X, chip595, pin595, 1);
+	X->setSingleChipSinglePin595(chip595, pin595, 1);
+}//setSingleNum595pattern
 
 /*----------------------------------------------------------
 Function Name: 
-	dispSdigit
+	dispSdigitChar
 Purpose: 
 	Display a single integer on a specific digit of 7segment LED of common cathode type.
 How to:
 	1. According to the input "dispMode", referece array values are set.
-	2. "setGroup595pattern" function will compose the byte patterns of all 74HC595 chips.
+	2. "setSingleNum595pattern" function will compose the byte patterns of all 74HC595 chips.
 	3. "X->ctrlAll()" will shift-out the byte patterns to the corresponding 74HC595 chips.
 	4. if "_nightMode" is set, then make the 7 seg LED dimmer or darker.
 	5. After displaying a single digit for "_singleDigitDelay", the digit will be blank off.
@@ -415,24 +381,28 @@ Advantage:
 	Detached from the longer "dispMdigits". 
 Ref:
 ----------------------------------------------------------*/
-void Four7segX :: dispSdigit (trippleX* X, byte singleDigit, byte unit, byte pos, byte dispMode)
+void Four7segX :: dispSdigitChar (trippleX* X, byte arrEleSingleDigitChar, byte unit, byte pos, byte dispMode)
 {
 	byte n;
 	byte chip595;
 	byte pin595;
 
 	if (dispMode == DISP_NUM_NORMAL)
-		setGroup595pattern(X, _7segABC_Num, singleDigit, unit, dispMode);
-	else
-		setGroup595pattern(X, _7segABC_Num_UpsideDown, singleDigit, unit, dispMode);
+		setSingleNum595pattern(X, _7segABC_Num, arrEleSingleDigitChar, unit, dispMode);
+	else if (dispMode == DISP_NUM_UPSIDEDOWN)
+		setSingleNum595pattern(X, _7segABC_Num_UpsideDown, arrEleSingleDigitChar, unit, dispMode);
+	else if (dispMode == DISP_CHAR_NORMAL)
+		setSingleNum595pattern(X, _7segABC_Alpha, arrEleSingleDigitChar, unit, dispMode);
 	X->ctrlAll();
 
 	if (_nightMode)
 	{
 		if (dispMode == DISP_NUM_NORMAL)
-			setGroup595pattern(X, _7segABC_Num, BLANK_IDX, unit, dispMode);
-		else
-			setGroup595pattern(X, _7segABC_Num_UpsideDown, BLANK_IDX, unit, dispMode);
+			setSingleNum595pattern(X, _7segABC_Num, BLANK_IDX, unit, dispMode);
+		else if (dispMode == DISP_NUM_UPSIDEDOWN)
+			setSingleNum595pattern(X, _7segABC_Num_UpsideDown, BLANK_IDX, unit, dispMode);
+		else if (dispMode == DISP_CHAR_NORMAL)
+			setSingleNum595pattern(X, _7segABC_Alpha, BLANK_CHAR_IDX, unit, dispMode);
 		X->ctrlAll();
 		delay(NIGHT_BRIGHTNESS_DELAY);
 	}
@@ -448,8 +418,9 @@ void Four7segX :: dispSdigit (trippleX* X, byte singleDigit, byte unit, byte pos
 		n = MAXDIG7SEG - 1 - unit ;
 	chip595 = (_digitPins[n] >> SECTOR_BIT_LOCATION_74HC595) & 0x0F;
 	pin595 = _digitPins[n] & 0x0F;
-	setChip595(X, chip595, pin595, 0);
-}//dispSdigit
+	//setSingleChipSinglePin595(X, chip595, pin595, 0);
+	X->setSingleChipSinglePin595(chip595, pin595, 0);
+}//dispSdigitChar
 
 /*----------------------------------------------------------
 Function Name: 
@@ -467,6 +438,8 @@ Arguments:
 	int num - Number to display
 	byte pos - Position to display Decimal Point(DP)
 	byte duration - Number of iteration for sigle digit duration
+	byte dispMode - display mode or orientation.
+					header file(Four7segX.h) has definitions 
 Updated: 
 	May 14, 2019 (Tue)
 Created: 
@@ -494,7 +467,7 @@ void Four7segX :: dispMdigits(trippleX* X,int num, byte pos, byte duration, byte
 		//display each digit of 7 segment LED
 		for(d=0; d < _numDigits; d++)
 		{
-			dispSdigit (X, eachDigit[d], d, pos, dispMode);
+			dispSdigitChar (X, eachDigit[d], d, pos, dispMode);
 		}//for d
 	}//for k
 	
@@ -502,17 +475,20 @@ void Four7segX :: dispMdigits(trippleX* X,int num, byte pos, byte duration, byte
 
 /*----------------------------------------------------------
 Function Name: 
-	disp4chars
+	dispMchars
 Purpose: 
 	Display a character string on 4 (or multiple) digits 7segment  LED of common cathode type.
 How to:
-	1. An input "num" will be decomposed as thousands, hundres, tens and ones.
-	2. The decomposed numbers will be shown up at each digit position very short time in a round-robin manner.
+	1. An input "str" will be parced.
+	2. Each char will be shown up at each digit position very short time in a round-robin manner.
 	3. Human eyes recognize the four digits are lit up simultaneously rather than on & off sequentially.
 Arguments: 
 	char* str - Character string to display
 	byte duration - Number of iteration for sigle digit duration
+	byte dispMode - display mode or orientation.
+					header file(Four7segX.h) has definitions 
 Updated: 
+	May 15, 2019 (Wed)
 	May 8, 2019 (Wed)
 		1) Give the Class instance as call-by reference argument, rather than creat another instance in the function.
 		--> Save ATmega328P flash footprint by 400 bytes (HEX size from 3212 to 2812).
@@ -533,14 +509,11 @@ Limitation:
 Ref:
 	Arduino power fuction https://www.arduino.cc/reference/en/language/functions/math/pow/
 ----------------------------------------------------------*/
-void Four7segX :: dispMchars (trippleX* X, char* str, byte duration, byte dispMode)
+void Four7segX :: dispMchars (trippleX* X, char* str, byte pos, byte duration, byte dispMode)
 {
 	byte k;
 	byte d;
-	byte posStr;
-	byte n;
-	byte chip595;
-	byte pin595;
+	byte arrEle;
 
     //Byte pattern of parallel pins of each 74HC595 chip
 	byte group595[MAXCHIP74HC595]; //array element 0 for botX, 1 for midX, 2 for topX 
@@ -553,32 +526,11 @@ void Four7segX :: dispMchars (trippleX* X, char* str, byte duration, byte dispMo
 		for(d=0; d < _numDigits; d++)
 		{
 			if (str[d] == ' ')
-				posStr = BLANK_CHAR_IDX;
+				arrEle = BLANK_CHAR_IDX;
 			else
-				posStr = str[d]-'A';
-			setGroup595pattern(X, _7segABC_Alpha, posStr, d, dispMode);
-			X->ctrlAll();
+				arrEle = str[d]-'A';
 
-			if (_nightMode)
-			{
-				setGroup595pattern(X, _7segABC_Alpha, BLANK_CHAR_IDX, d, dispMode);
-				X->ctrlAll();
-				delay(NIGHT_BRIGHTNESS_DELAY);
-			}
-
-			// should be short enough to give a static view of multiple digits on 7 seg LED
-			//"_singleDigitDelay" determines how long a single digit of a number are to be shown. 
-			delay(_singleDigitDelay);
-
-			//Clear digit for each digit should be turned on and off sequentially.
-			if (dispMode == DISP_NUM_NORMAL)
-				n = d;
-			else 
-				n = MAXDIG7SEG - 1 - d ;
-			chip595 = (_digitPins[n] >> SECTOR_BIT_LOCATION_74HC595) & 0x0F;
-			pin595 = _digitPins[n] & 0x0F;
-			setChip595(X, chip595, pin595, 0);
-
+			dispSdigitChar (X, arrEle, d, pos, dispMode);
 		}//for d
 
 	}//for k

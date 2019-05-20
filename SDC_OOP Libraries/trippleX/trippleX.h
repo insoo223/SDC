@@ -21,6 +21,7 @@ Ref:
 #define trippleX_h
 
 #include "Arduino.h"
+//#include "Four7segX.h"
 
 #define MAXCHIP74HC595 3 //number of 74HC595 chips used for SDC
 
@@ -48,6 +49,7 @@ public:
 	void ctrlAll();
     void ctrlAll_legacy(uint8_t topX, uint8_t midX, uint8_t botX);
 
+	void setSingleChipSinglePin595 (byte chipID, byte pinID, byte val);
 	void ctrlSingle(uint8_t ctrlID, uint8_t state);
 	//void ctrlSingle_legacy(uint8_t ctrlID, uint8_t state);
 	

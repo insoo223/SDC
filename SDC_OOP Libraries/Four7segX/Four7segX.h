@@ -47,12 +47,13 @@ public:
 
 	void dispAllSegs(trippleX* X, byte numUnit);
 	
-	void setChip595 (trippleX* X, byte chipID, byte pinID, byte val);
-	void setGroup595pattern (trippleX* X, byte* segVal, byte num, byte digit, byte dispMode);
-	void dispMdigits (trippleX* X,int num, byte pos, byte duration, byte dispMode);
-	void dispSdigit (trippleX* X, byte singleDigit, byte unit, byte pos, byte dispMode);
+	void setSingleNum595pattern (trippleX* X, byte* segVal, byte num, byte digit, byte dispMode);
 
-    void dispMchars (trippleX* X, char* str, byte duration, byte dispMode);
+	void dispSdigitChar (trippleX* X, byte singleDigitChar, byte unit, byte pos, byte dispMode);
+
+	void dispMdigits (trippleX* X,int num, byte pos, byte duration, byte dispMode);
+
+    void dispMchars (trippleX* X, char* str, byte pos, byte duration, byte dispMode);
 
 	void setSingleDigitDelay(int num);
 	int getSingleDigitDelay();

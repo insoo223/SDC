@@ -13,7 +13,7 @@ Created:
 	By Insoo Kim (insoo@hotmail.com) on Oct 24, 2015
 Advantage:
 Limitation:
-Ref:
+Ref: Tightly coupled with "Four7segX.cpp & h"
 ----------------------------------------------------------*/
 
 #include "Arduino.h"
@@ -101,6 +101,57 @@ void trippleX :: ctrlAll_legacy(uint8_t topX, uint8_t midX, uint8_t botX)
 //    ctrlID: refer "defs.h", 74HC595 pin assignments
 //    state: HIGH to set, LOW to clear a corresponding pin of a 74HC595
 
+
+/*----------------------------------------------------------
+Function Name: 
+	setSingleChipSinglePin595
+Purpose: 
+	Display an integer on 4 (or multiple) digits 7segment LED of common cathode type.
+How to:
+	1. 
+	2. 
+	3. 
+Arguments:
+	Input
+		byte chipID - to which chip of mulitple 74HC595s 
+		byte pinID - to which pin of a specific "chipID" 74HC595
+		byte val - 1 or 0, HIGH or LOW
+Updated: 
+	May 15, 2019 (Wed)
+Created: 
+	May 13, 2019 (Mon)
+Limitation:
+Ref:
+----------------------------------------------------------*/
+void trippleX :: setSingleChipSinglePin595 (byte chipID, byte pinID, byte val)
+{
+	if (val == 1)
+		_curX[MAXCHIP74HC595-chipID] |= _BV(pinID);
+	else
+		_curX[MAXCHIP74HC595-chipID] &= ~_BV(pinID);
+}//setSingleChipSinglePin595
+
+/*----------------------------------------------------------
+Function Name: 
+	ctrlSingle
+Purpose: 
+	Display an integer on 4 (or multiple) digits 7segment LED of common cathode type.
+How to:
+	1. 
+	2. 
+	3. 
+Arguments:
+	Input
+		byte chipID - to which chip & pin of mulitple 74HC595s 
+		byte state - 1 or 0, HIGH or LOW
+Updated: 
+	
+Created: 
+	Oct 24, 2015
+Limitation:
+	This is the function similar to "setSingleChipSinglePin595"
+Ref:
+----------------------------------------------------------*/
 void trippleX :: ctrlSingle(uint8_t ctrlID, uint8_t state)
 {
     //uint8_t bottomByte, middleByte, topByte;

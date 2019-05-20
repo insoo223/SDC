@@ -84,18 +84,18 @@ void test_trippleX_7segNum()
 // Display from A to Z and some movement action defined by Insoo
 void test_trippleX_7segChar()
 { 
-  _7X.dispMchars(&X, "ABCD", 100, DISP_CHAR_NORMAL);
-  _7X.dispMchars(&X, "ABCD", 100, DISP_CHAR_NORMAL); // legacy 2920, iteration 2572
-  _7X.dispMchars(&X, "EFGH", 100, DISP_CHAR_NORMAL);
-  _7X.dispMchars(&X, "IJKL", 100, DISP_CHAR_NORMAL);
-  _7X.dispMchars(&X, "MNOP", 100, DISP_CHAR_NORMAL);
-  _7X.dispMchars(&X, "QRST", 100, DISP_CHAR_NORMAL);
-  _7X.dispMchars(&X, "UVWX", 100, DISP_CHAR_NORMAL);
-  _7X.dispMchars(&X, "YZAB", 100, DISP_CHAR_NORMAL);
-  _7X.dispMchars(&X, " FWD", 100, DISP_CHAR_NORMAL); //forward
-  _7X.dispMchars(&X, " BWD", 100, DISP_CHAR_NORMAL); //backward
-  _7X.dispMchars(&X, "TNCK", 100, DISP_CHAR_NORMAL); //turn clockwise
-  _7X.dispMchars(&X, "TNAC", 100, DISP_CHAR_NORMAL); //turn anti-clockwise
+  _7X.dispMchars(&X, "ABCD", 0, 100, DISP_CHAR_NORMAL);
+  _7X.dispMchars(&X, "ABCD", 0, 100, DISP_CHAR_NORMAL); // legacy 2920, iteration 2572
+  _7X.dispMchars(&X, "EFGH", 0, 100, DISP_CHAR_NORMAL);
+  _7X.dispMchars(&X, "IJKL", 0, 100, DISP_CHAR_NORMAL);
+  _7X.dispMchars(&X, "MNOP", 0, 100, DISP_CHAR_NORMAL);
+  _7X.dispMchars(&X, "QRST", 0, 100, DISP_CHAR_NORMAL);
+  _7X.dispMchars(&X, "UVWX", 0, 100, DISP_CHAR_NORMAL);
+  _7X.dispMchars(&X, "YZAB", 0, 100, DISP_CHAR_NORMAL);
+  _7X.dispMchars(&X, " FWD", 0, 100, DISP_CHAR_NORMAL); //forward
+  _7X.dispMchars(&X, " BWD", 0, 100, DISP_CHAR_NORMAL); //backward
+  _7X.dispMchars(&X, "TNCK", 0, 100, DISP_CHAR_NORMAL); //turn clockwise
+  _7X.dispMchars(&X, "TNAC", 0, 100, DISP_CHAR_NORMAL); //turn anti-clockwise
 }//test_trippleX_7segChar
 
 //-------------------------------------------
@@ -105,6 +105,7 @@ void test_trippleX_7segNum_UpsideDown()
   for (int i=0; i<10000; i++)
     _7X.dispMdigits(&X, i, 0x00, 20, DISP_NUM_UPSIDEDOWN); // HEX size: 3470 bytes (as of May 14, 2019)
 }//test_trippleX_7segNum_UpsideDown
+
 
 /***************************
 //-------------------------------------------

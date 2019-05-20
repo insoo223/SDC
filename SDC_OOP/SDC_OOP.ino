@@ -105,8 +105,8 @@ void loop()
   //test_DHT11X();
   //test_RTX();
   //test_L293DX();
-  //test_trippleX_7segNum_UpsideDown();
   //test_trippleX_7segChar();
+  //test_trippleX_7segNum_UpsideDown();
   test_trippleX_7segNum();
   //allSeg_trippleX();
 }//loop
