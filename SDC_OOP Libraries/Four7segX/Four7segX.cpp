@@ -4,9 +4,17 @@ File Name:
 Purpose: 
 	Control 4 digits 7 segment LED on tripple 74HC595
 Updated: 
-	May 14, 2019 (Tue) - OOP Simplification Stage #1
+	May 15, 2019 (Wed) - OOP Simplification Stage #02
+		1) Modified "dispAllSegs" function to accomodate newly structured "_segPin" array elements which has chipID as well as pinID.
+		2) Detached "dispSdigit" function from "dispMdigits", and looks more neat and tidy.
+	May 14, 2019 (Tue) - OOP Simplification Stage #01
 		1) Successfully created "dispMdigits" function to replace "disp4digits". 
 			The former is better structured and scalable.
+		2) Eliminate "disp4digits_UpsideDown" function by adding dispMode arg. to the "dispMdigits" function
+		3) Created "dispMdigits" function to replace "disp4digits". 
+			The former is better structured and scalable.
+			Eliminate "disp4chars", "getTopX_Num", "getTopX_ABC" functions by adding dispMode arg. to the "dispMdigits" function
+
 	May 08, 2019 (Wed) - 
 		1) Class instance as call by referency 
 		2) iterative logic to disp4digits, disp4chars, disp4digits_UpsideDown,
@@ -88,8 +96,6 @@ Four7segX :: Four7segX(byte* segPins) //May 9, 2019
 		_segPins[i] = segPins[i];
 
 	_nightMode = false;
-    //_numDigits = MAXDIG7SEG;
-	//_singleDigitDelay = SINGLE_DIGIT_DELAY;
 }//Four7segX
 
 void Four7segX :: setNumDigits(byte num)
@@ -259,133 +265,36 @@ Ref:
 ----------------------------------------------------------*/
 void Four7segX :: dispAllSegs(trippleX* X, byte numUnit)
 {
-  byte m, aByte;
+  byte m, aByte; 
+  //byte arrBytes[MAXCHIP74HC595];
+
   for(m=0; m<MAXSEG; m++)
   {
-	aByte = simplePow(2,_segPins[m]);
-    X->ctrlAll_legacy(aByte, _BV(numUnit), 0);
+	aByte = simplePow(2,(_segPins[m] & 0x0F));
+
+	/*
+	arrBytes[MAXCHIP74HC595-1] = aByte;
+	arrBytes[MAXCHIP74HC595-2] = _BV(numUnit);
+	arrBytes[MAXCHIP74HC595-3] = 0;
+
+	X->updateX(arrBytes);
+	X->ctrlAll();
+	*/
+	X->ctrlAll_legacy (aByte, _BV(numUnit), 0);
     delay(SEG_DISP_DELAY);
-    X->ctrlAll_legacy(0, _BV(numUnit), 0);
+
+	/*
+	arrBytes[MAXCHIP74HC595-1] = 0;
+	arrBytes[MAXCHIP74HC595-2] = _BV(numUnit);
+	arrBytes[MAXCHIP74HC595-3] = 0;
+	X->updateX(arrBytes);
+	X->ctrlAll();
+	*/
+	X->ctrlAll_legacy (0, _BV(numUnit), 0);
     delay(SEG_DISP_DELAY);
   }
-}// dispSeg_trippleX  
+}// dispAllSegs  
 
-/*----------------------------------------------------------
-Function Name: 
-	disp4digits
-Purpose: 
-	Display an integer on 4 (or multiple) digits 7segment LED of common cathode type.
-How to:
-	1. An input "num" will be decomposed as thousands, hundres, tens and ones.
-	2. The decomposed numbers will be shown up at each digit position very short time in a round-robin manner.
-	3. Human eyes recognize the four digits are lit up simultaneously rather than on & off sequentially.
-Arguments: 
-	int num - Number to display
-	byte pos - Position to display Decimal Point(DP)
-	byte duration - Number of iteration for sigle digit duration
-Updated: 
-	May 8, 2019 (Wed)
-		1) Give the Class instance as call-by reference argument, rather than creat another instance in the function.
-		--> Save ATmega328P flash footprint by 38 bytes (HEX size from 3172 to 3134).
-			By calling test_trippleX_7segNum(); and running _7X.disp4digits(&X, i,0, 50); than _7X.disp4digits(i, 0, 50); in the Arduino source.
-		--> Change the calling pattern to the class because of using its instance as call-by reference argument.
-			From X.getCurrentX(group595); to X->getCurrentX(group595);
-		2)  Use iteration in "Four7segX :: disp4digits" function
-		--> Save HEX size by 72 bytes: (HEX size from 3134 to 3062).
-
-	May 6, 2019 (Mon)
-Created: 
-	Oct 29, 2015
-Limitation:
-	"disp4digits" function is using decomposition loop which is applicable regardless of number of digits of 7 segment LED,
-	But, has bigger footprint in flash size. i.e.
-		_7X.disp4digits(5678,0, 40); // HEX size: 3172 bytes using decimalPow, 5138 bytes using Arduino std pow
-		_7X.disp4digits_legacy(5678,0, 40); // HEX size: 2868 bytes
-Ref:
-	malloc() not recommended in an embedded system
-		https://arduino.stackexchange.com/questions/682/is-using-malloc-and-free-a-really-bad-idea-on-arduino
-	Arduino power fuction https://www.arduino.cc/reference/en/language/functions/math/pow/
-----------------------------------------------------------*/
-void Four7segX :: disp4digits(trippleX* X,int num, byte pos, byte duration)
-{
-    //Decomposition of input arg."num"
-	byte eachDigit[MAXDIG7SEG]; //array element 0 for 10^0, 1 for 10^1, 2 for 10^2, 3 for 10^3
-	//byte *eachDigit;
-	int val;
-	byte k;
-	byte p;
-	byte n;
-
-    //Byte pattern of parallel pins of each 74HC595 chip
-	byte group595[MAXCHIP74HC595]; //array element 0 for botX, 1 for midX, 2 for topX 
-
-	//eachDigit = malloc(sizeof(byte) * (_numDigits*2));
-	//for(k=0; k<MAXDIG7SEG; k++)
-	//	eachDigit[k]=0;
-
-	//Get the number for each digit position
-	decomposeNum(num, eachDigit);
-    
-	//Get the byte patterns of the current 74HC595 parallel pins
-	//These will be updated to show "num" on the 4digit7segment LED
-	X->getCurrentX(group595);
-
-	//Eliminate a remnant display at the 1000s digit
-	//All the segments of the 7segment LEDare connected to the Top 74HC595, so 0x00 is engaged  at the Top 74HC595
-	//This fuction is dependent on the schematic
-	/*
-	group595[MAXCHIP74HC595-1] = 0x00;
-	group595[MAXCHIP74HC595-2] = _BV(_digitPins[MAXCHIP74HC595-1]);
-	group595[MAXCHIP74HC595-3] = 0;
-	X->ctrlAll(group595);
-	*/
-	//X->ctrlAll_legacy (0x00, _BV(_digitKilos), group595[0]);
-	//X->ctrlAll_legacy (0x00, _BV(_digitPins[MAXCHIP74HC595-1]), group595[MAXCHIP74HC595-2]);
-    
-	//display 1 to _numDigits digit on 7 segment LED
-	for(k=0; k<duration; k++)
-    {
-		//display each digit of 7 segment LED
-		for(n=0; n < _numDigits; n++)
-		{
-
-			group595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num, eachDigit[n]);
-
-			//remove leading zeros for Tens and above
-			val=0;
-			if (n>0)
-			{
-				for(p=0; p<_numDigits-n+1; p++)
-					val += eachDigit[_numDigits-p];
-
-				if (val == 0)
-					group595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num, BLANK_IDX);
-				else
-					group595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num, eachDigit[n]);
-			}
-			//check DP on or off
-			if ( ((pos & simplePow(2, n)) >> n) == 1)
-				group595[MAXCHIP74HC595-1] |= getTopX_Num(_7segABC_Num, DP_IDX);
-
-
-			X->ctrlAll_legacy (group595[MAXCHIP74HC595-1], _BV(n) | group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
-			
-			if (_nightMode)
-			{
-				X->ctrlAll_legacy (group595[MAXCHIP74HC595-1], ~_BV(n) & group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
-				delay(NIGHT_BRIGHTNESS_DELAY);
-			}
-
-			delay(_singleDigitDelay);
-		}//for n
-
-	}//for k
-
-    //eliminate a remnant display in K-unit
-	//X->ctrlAll_legacy(0,_BV(_digitKilos)  | group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
-	//X->ctrlAll_legacy(0,_BV(_digitPins[MAXCHIP74HC595-1])  | group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
-	
-}//disp4digits
 
 /*----------------------------------------------------------
 Function Name: 
@@ -410,11 +319,11 @@ Created:
 Limitation:
 Ref:
 ----------------------------------------------------------*/
-
-void Four7segX :: setChip595(trippleX* X, byte chipID, byte pinID, byte val)
+void Four7segX :: setChip595 (trippleX* X, byte chipID, byte pinID, byte val)
 {
-	byte grp595[MAXCHIP74HC595];
-	
+	byte grp595[MAXCHIP74HC595]; //Byte pattern of parallel pins of each 74HC595 chip
+								//array element MAXCHIP74HC595-1 for topX, MAXCHIP74HC595-2 for midX, MAXCHIP74HC595-3 for  botX
+								//array element 2 for topX, 1 for midX, 0 for botX, if using three 74HC595 chips.   
 	X->getCurrentX(grp595);
 
 	if (val == 1)
@@ -425,7 +334,6 @@ void Four7segX :: setChip595(trippleX* X, byte chipID, byte pinID, byte val)
 		//grp595[MAXCHIP74HC595-chipID] = ~_BV(pinID);
 
 	X->updateX(grp595);
-
 }//setChip595
 
 /*----------------------------------------------------------
@@ -451,8 +359,7 @@ Created:
 Limitation:
 Ref:
 ----------------------------------------------------------*/
-
-void Four7segX :: setGroup595pattern(trippleX* X, byte* segVal, byte num, byte digit)
+void Four7segX :: setGroup595pattern (trippleX* X, byte* segVal, byte num, byte digit, byte dispMode)
 {
 	byte i;
 	byte chip595;
@@ -471,10 +378,78 @@ void Four7segX :: setGroup595pattern(trippleX* X, byte* segVal, byte num, byte d
 	}
 	
 	//set digit
+	if ( (dispMode == DISP_NUM_UPSIDEDOWN) || (dispMode == DISP_CHAR_NORMAL) )
+		digit = MAXDIG7SEG - 1 - digit;
 	chip595 = (_digitPins[digit] >> SECTOR_BIT_LOCATION_74HC595) & 0x0F;
 	pin595 = _digitPins[digit] & 0x0F;
 	setChip595(X, chip595, pin595, 1);
 }//setGroup595pattern
+
+/*----------------------------------------------------------
+Function Name: 
+	dispSdigit
+Purpose: 
+	Display a single integer on a specific digit of 7segment LED of common cathode type.
+How to:
+	1. According to the input "dispMode", referece array values are set.
+	2. "setGroup595pattern" function will compose the byte patterns of all 74HC595 chips.
+	3. "X->ctrlAll()" will shift-out the byte patterns to the corresponding 74HC595 chips.
+	4. if "_nightMode" is set, then make the 7 seg LED dimmer or darker.
+	5. After displaying a single digit for "_singleDigitDelay", the digit will be blank off.
+Arguments:
+	Input & Output
+		trippleX* X - Class instance for multiple 74HC595
+	Input
+	byte singleDigit - a single integer digit to display
+	byte unit - a digit position or unit of a multiple digit 7 seg LED. 
+				Depends on the schematic. For SDC v1.x, the lower unit , the less significant number.
+	byte pos - Position to display Decimal Point(DP)
+	byte dispMode - display mode or orientation.
+					header file(Four7segX.h) has definitions 
+Updated: 
+	May 15, 2019 (Wed)
+Created: 
+	May 15, 2019 (Wed)
+Limitation:
+Advantage:
+	Detached from the longer "dispMdigits". 
+Ref:
+----------------------------------------------------------*/
+void Four7segX :: dispSdigit (trippleX* X, byte singleDigit, byte unit, byte pos, byte dispMode)
+{
+	byte n;
+	byte chip595;
+	byte pin595;
+
+	if (dispMode == DISP_NUM_NORMAL)
+		setGroup595pattern(X, _7segABC_Num, singleDigit, unit, dispMode);
+	else
+		setGroup595pattern(X, _7segABC_Num_UpsideDown, singleDigit, unit, dispMode);
+	X->ctrlAll();
+
+	if (_nightMode)
+	{
+		if (dispMode == DISP_NUM_NORMAL)
+			setGroup595pattern(X, _7segABC_Num, BLANK_IDX, unit, dispMode);
+		else
+			setGroup595pattern(X, _7segABC_Num_UpsideDown, BLANK_IDX, unit, dispMode);
+		X->ctrlAll();
+		delay(NIGHT_BRIGHTNESS_DELAY);
+	}
+
+	// should be short enough to give a static view of multiple digits on 7 seg LED
+	//"_singleDigitDelay" determines how long a single digit of a number are to be shown. 
+	delay(_singleDigitDelay);
+
+	//Clear digit for each digit should be turned on and off sequentially.
+	if (dispMode == DISP_NUM_NORMAL)
+		n = unit;
+	else 
+		n = MAXDIG7SEG - 1 - unit ;
+	chip595 = (_digitPins[n] >> SECTOR_BIT_LOCATION_74HC595) & 0x0F;
+	pin595 = _digitPins[n] & 0x0F;
+	setChip595(X, chip595, pin595, 0);
+}//dispSdigit
 
 /*----------------------------------------------------------
 Function Name: 
@@ -501,47 +476,26 @@ Advantage:
 	Better structured and scalable than the legacy "disp4digits". 
 Ref:
 ----------------------------------------------------------*/
-void Four7segX :: dispMdigits(trippleX* X,int num, byte pos, byte duration)
+void Four7segX :: dispMdigits(trippleX* X,int num, byte pos, byte duration, byte dispMode)
 {
-    //Decomposition of input arg."num"
-	byte eachDigit[MAXDIG7SEG]; //array element 0 for 10^0, 1 for 10^1, 2 for 10^2, 3 for 10^3
+    
+	byte eachDigit[MAXDIG7SEG]; //Decomposition of input arg."num"
+								//array element 0 for 10^0, 1 for 10^1, 2 for 10^2, 3 for 10^3
 	byte k;
 	byte d;
-	byte chip595;
-	byte pin595;
-
-    //Byte pattern of parallel pins of each 74HC595 chip
-	byte group595[MAXCHIP74HC595]; //array element 0 for botX, 1 for midX, 2 for topX 
 
 	//Get the number for each digit position
 	decomposeNum(num, eachDigit);
     
 	//display 1 to _numDigits digit on 7 segment LED
+	//"duration" determines how long the whole digits of a number are to be shown. 
 	for(k=0; k<duration; k++)
     {
 		//display each digit of 7 segment LED
 		for(d=0; d < _numDigits; d++)
 		{
-			setGroup595pattern(X, _7segABC_Num, eachDigit[d], d);
-			X->ctrlAll();
-
-			if (_nightMode)
-			{
-				setGroup595pattern(X, _7segABC_Num, BLANK_IDX, d);
-				X->ctrlAll();
-				delay(NIGHT_BRIGHTNESS_DELAY);
-			}
-
-			// should be short enough to give a static view of multiple digits on 7 seg LED
-			delay(_singleDigitDelay);
-
-			//Clear digit for each digit should be turned on and off sequentially.
-			chip595 = (_digitPins[d] >> SECTOR_BIT_LOCATION_74HC595) & 0x0F;
-			pin595 = _digitPins[d] & 0x0F;
-			setChip595(X, chip595, pin595, 0);
-
-		}//for n
-
+			dispSdigit (X, eachDigit[d], d, pos, dispMode);
+		}//for d
 	}//for k
 	
 }//dispMdigits
@@ -579,188 +533,54 @@ Limitation:
 Ref:
 	Arduino power fuction https://www.arduino.cc/reference/en/language/functions/math/pow/
 ----------------------------------------------------------*/
-void Four7segX :: disp4chars(trippleX* X, char* str, int duration)
+void Four7segX :: dispMchars (trippleX* X, char* str, byte duration, byte dispMode)
 {
-    //byte topX, midX, botX;
-	byte group595[MAXCHIP74HC595];
 	byte k;
+	byte d;
+	byte posStr;
 	byte n;
-    
-    //trippleX X;
-    
-    //X.getCurrentX_legacy(&topX, &midX, &botX);
-	X->getCurrentX(group595);
-    
-    for (k=0; k<duration; k++)
-    {
-		//display each char of 7 segment LED
-		for(n=0; n<_numDigits; n++)
-		{
-			group595[MAXCHIP74HC595-1] = getTopX_ABC(str[_numDigits-1-n]);
-			X->ctrlAll_legacy (group595[MAXCHIP74HC595-1], _BV(n) | group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
+	byte chip595;
+	byte pin595;
 
-			if (_nightMode)
-			{
-				X->ctrlAll_legacy (group595[MAXCHIP74HC595-1], ~_BV(n) & group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
-				delay(NIGHT_BRIGHTNESS_DELAY);
-			}
-
-			delay(_singleDigitDelay);
-		}//for n
-    }//for k
-
-	//eliminate a remnant display in K-unit
-    //X->ctrlAll_legacy(0,_BV(_digitKilos)  | group595[1], group595[0]);
-	X->ctrlAll_legacy(0,_BV(_digitPins[MAXCHIP74HC595-1])  | group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
-}//disp4chars
-
-/*----------------------------------------------------------
-Function Name: 
-	disp4digits_UpsideDown
-Purpose: 
-	Upsid-down display an integer on 4 (or multiple) digits 7segment LED of common cathode type.
-	When using a person's height measure using the ultrasound transducer, you need to hold the SDC upside-down,
-		so as the display shoud be upside-down.
-How to:
-	1. An input "num" will be decomposed as thousands, hundres, tens and ones.
-	2. The decomposed numbers will be shown up at each digit position very short time in a round-robin manner.
-	3. Human eyes recognize the four digits are lit up simultaneously rather than on & off sequentially.
-Arguments: 
-	int num - Number to display
-	byte pos - Position to display Decimal Point(DP)
-	byte duration - Number of iteration for sigle digit duration
-Updated: 
-	May 8, 2019 (Wed)
-		1) Give the Class instance as call-by reference argument, rather than creat another instance in the function.
-		--> Save ATmega328P flash footprint by ?? bytes (HEX size from ?? to ??).
-			By calling test_trippleX_7segNum_UpsideDown(); and running _7X.disp4digits_UpsideDown(&X, i,0, 50); than _7X.disp4digits(i, 0, 50); in the Arduino source.
-		--> Change the calling pattern to the class because of using its instance as call-by reference argument.
-			From X.getCurrentX(group595); to X->getCurrentX(group595);
-		2)  Use iteration in "Four7segX :: disp4digits_UpsideDown" function
-		--> Save HEX size by ?? bytes: (HEX size from ?? to ??).
-
-	May 6, 2019 (Mon)
-Created: 
-	Oct 29, 2015
-Limitation:
-	"disp4digits" function is using decomposition loop which is applicable regardless of number of digits of 7 segment LED,
-	But, has bigger footprint in flash size. i.e.
-		_7X.disp4digits(5678,0, 40); // HEX size: 3172 bytes using decimalPow, 5138 bytes using Arduino std pow
-		_7X.disp4digits_legacy(5678,0, 40); // HEX size: 2868 bytes
-Ref:
-	Arduino power fuction https://www.arduino.cc/reference/en/language/functions/math/pow/
-----------------------------------------------------------*/
-
-void Four7segX :: disp4digits_UpsideDown(trippleX* X, int num, int pos, int duration)
-{
-    //Decomposition of input arg."num"
-	byte eachDigit[MAXDIG7SEG]; //array element 0 for 10^0, 1 for 10^1, 2 for 10^2, 3 for 10^3
-	//byte *eachDigit;
-	int val;
-	byte k;
-	byte p;
-	byte n;
-    //Byte pattern of 74HC595 parallel pins
+    //Byte pattern of parallel pins of each 74HC595 chip
 	byte group595[MAXCHIP74HC595]; //array element 0 for botX, 1 for midX, 2 for topX 
-    
-	//eachDigit = malloc(sizeof(byte) * (_numDigits+1));//HEX 3130 -> 3664 by using malloc than fixed array
-	//for(k=0; k<_numDigits+1; k++)
-	//	eachDigit[k]=0;
 
-	//Get the number for each digit position
-	decomposeNum(num, eachDigit);
-    
-	//Get the byte patterns of the current 74HC595 parallel pins
-	//These will be updated to show "num" on the 4digit7segment LED
-	X->getCurrentX(group595);
-
-	//Do not need to eliminate a remnant display at the 1000s digit
-	//For some reason, there's NO residual display.
-    
-	//display 1 to MAXDIG7SEG digit on 7 segment LED
+	//display 1 to _numDigits digit on 7 segment LED
+	//"duration" determines how long the whole digits of a number are to be shown. 
 	for(k=0; k<duration; k++)
     {
 		//display each digit of 7 segment LED
-		for(n=0; n<_numDigits; n++)
+		for(d=0; d < _numDigits; d++)
 		{
-
-			group595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, eachDigit[n]);
-
-			//remove leading zeros for Tens and above
-			//NOT yet removed as of May 8, 2019
-			val=0;
-			if (n<MAXCHIP74HC595-1)
-			{
-				for(p=0; p<_numDigits-n+1; p++)
-					val += eachDigit[_numDigits-1-p];
-
-				if (val == 0)
-					group595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, BLANK_IDX);
-				else
-					group595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, eachDigit[n]);
-			}
-			//check DP on or off
-			if ( ((pos & simplePow(2, n)) >> n) == 1)
-				group595[MAXCHIP74HC595-1] |= getTopX_Num(_7segABC_Num_UpsideDown, DP_IDX);
-
-
-			X->ctrlAll_legacy (group595[MAXCHIP74HC595-1], _BV(_numDigits-1-n) | group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
+			if (str[d] == ' ')
+				posStr = BLANK_CHAR_IDX;
+			else
+				posStr = str[d]-'A';
+			setGroup595pattern(X, _7segABC_Alpha, posStr, d, dispMode);
+			X->ctrlAll();
 
 			if (_nightMode)
 			{
-				X->ctrlAll_legacy (group595[MAXCHIP74HC595-1], ~_BV(n) & group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
+				setGroup595pattern(X, _7segABC_Alpha, BLANK_CHAR_IDX, d, dispMode);
+				X->ctrlAll();
 				delay(NIGHT_BRIGHTNESS_DELAY);
 			}
 
+			// should be short enough to give a static view of multiple digits on 7 seg LED
+			//"_singleDigitDelay" determines how long a single digit of a number are to be shown. 
 			delay(_singleDigitDelay);
-		}//for n
+
+			//Clear digit for each digit should be turned on and off sequentially.
+			if (dispMode == DISP_NUM_NORMAL)
+				n = d;
+			else 
+				n = MAXDIG7SEG - 1 - d ;
+			chip595 = (_digitPins[n] >> SECTOR_BIT_LOCATION_74HC595) & 0x0F;
+			pin595 = _digitPins[n] & 0x0F;
+			setChip595(X, chip595, pin595, 0);
+
+		}//for d
 
 	}//for k
-
-	//Do not need to eliminate a remnant display at the 1000s digit
-	//For some reason, there's NO residual display.
-
-}//disp4digits_UpsideDown
-
-
-//-------------------------------------------------
-byte Four7segX :: getTopX_Num(byte* numArray, byte num)
-{
-    byte targetByte, topByte=0;
-    byte i;
-    
-    // get A to G & DP_IDX bit pattern for "num"
-	targetByte = numArray[num];
-    
-    // convert 7seg ABC byte into the byte for 74HC595 Q-pin
-    for (i=0; i<8; i++)
-        if ( (targetByte >> i) & 0x01 )
-		//if (targetByte >> i)
-            topByte |= 1 << _segPins[i];
-    
-    return (topByte);
-} //getTopX_Num
-
-byte Four7segX :: getTopX_ABC(char C)
-{
-    byte targetByte, topByte=0;
-    byte i, arrIndex;
-    
-    //check space or blank char
-    if ((int)C == 32)
-        arrIndex = 26;
-    else
-        arrIndex = C - 'A';
-    // get A to G & DP_IDX bit pattern for "num"
-    targetByte = _7segABC_Alpha[arrIndex];
-    
-    // convert 7seg ABC byte into the byte for 74HC595 Q-pin
-    for (i=0; i<8; i++)
-        if ( (targetByte >> i) & 0x01 )
-            topByte |= 1 << _segPins[i];
-    
-    return (topByte);
-} //getTopX_ABC
-
-
-
+	
+}//dispMchars

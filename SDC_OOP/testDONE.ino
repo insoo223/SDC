@@ -71,7 +71,9 @@ void test_trippleX_7segNum()
   //_7X.dispMdigits(&X, 1234, 0x00, 200); 
   //_7X.disp4digits_legacy(5678,0, 40); // HEX size: 2868 bytes
   for (int i=0; i<10000; i++)
-      _7X.dispMdigits(&X, i, 0x00, 20); 
+      _7X.dispMdigits(&X, i, 0x00, 20, DISP_NUM_NORMAL); 
+                        // HEX size: 3464 bytes (as of May 14, 2019)
+      //_7X.dispMdigits(&X, i, 0x00, 20, DISP_NUM_UPSIDEDOWN); 
     //_7X.disp4digits(&X, i, 0x00, 20); // 3rd arg. is for DP (0x00: No DP, 0x01: Ones, 0x02: Tens, 0x04: H, 0x08: K)
                         // HEX size: 3134 bytes using the pointer of a Class instance in my library
                         // HEX size: 3062 bytes using iteration in "Four7segX :: disp4digits" function
@@ -82,17 +84,18 @@ void test_trippleX_7segNum()
 // Display from A to Z and some movement action defined by Insoo
 void test_trippleX_7segChar()
 { 
-  _7X.disp4chars(&X, "ABCD", 100); // legacy 2920, iteration 2572
-  _7X.disp4chars(&X, "EFGH", 100);
-  _7X.disp4chars(&X, "IJKL", 100);
-  _7X.disp4chars(&X, "MNOP", 100);
-  _7X.disp4chars(&X, "QRST", 100);
-  _7X.disp4chars(&X, "UVWX", 100);
-  _7X.disp4chars(&X, "YZAB", 100);
-  _7X.disp4chars(&X, " FWD", 100); //forward
-  _7X.disp4chars(&X, " BWD", 100); //backward
-  _7X.disp4chars(&X, "TNCK", 100); //turn clockwise
-  _7X.disp4chars(&X, "TNAC", 100); //turn anti-clockwise
+  _7X.dispMchars(&X, "ABCD", 100, DISP_CHAR_NORMAL);
+  _7X.dispMchars(&X, "ABCD", 100, DISP_CHAR_NORMAL); // legacy 2920, iteration 2572
+  _7X.dispMchars(&X, "EFGH", 100, DISP_CHAR_NORMAL);
+  _7X.dispMchars(&X, "IJKL", 100, DISP_CHAR_NORMAL);
+  _7X.dispMchars(&X, "MNOP", 100, DISP_CHAR_NORMAL);
+  _7X.dispMchars(&X, "QRST", 100, DISP_CHAR_NORMAL);
+  _7X.dispMchars(&X, "UVWX", 100, DISP_CHAR_NORMAL);
+  _7X.dispMchars(&X, "YZAB", 100, DISP_CHAR_NORMAL);
+  _7X.dispMchars(&X, " FWD", 100, DISP_CHAR_NORMAL); //forward
+  _7X.dispMchars(&X, " BWD", 100, DISP_CHAR_NORMAL); //backward
+  _7X.dispMchars(&X, "TNCK", 100, DISP_CHAR_NORMAL); //turn clockwise
+  _7X.dispMchars(&X, "TNAC", 100, DISP_CHAR_NORMAL); //turn anti-clockwise
 }//test_trippleX_7segChar
 
 //-------------------------------------------
@@ -100,7 +103,7 @@ void test_trippleX_7segChar()
 void test_trippleX_7segNum_UpsideDown()
 {
   for (int i=0; i<10000; i++)
-    _7X.disp4digits_UpsideDown(&X, i, 0x00, 50);
+    _7X.dispMdigits(&X, i, 0x00, 20, DISP_NUM_UPSIDEDOWN); // HEX size: 3470 bytes (as of May 14, 2019)
 }//test_trippleX_7segNum_UpsideDown
 
 /***************************
