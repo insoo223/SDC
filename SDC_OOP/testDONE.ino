@@ -113,9 +113,9 @@ void test_trippleX_7segNum_UpsideDown()
 //-------------------------------------------
 // Forward Move. With 3.7V mobile rechargeable battery, 
 //  sometimes initial torque of right side motor is not enouph to kick-off.
-void test_L293DX_fwd()
+void test_L293DX_fwd( )
 {
-  motor.fwd(2000);
+  motor.fwd(&X, 2000);
   motor.stop(1000);
 }//test_L293DX_fwd
 
@@ -127,12 +127,12 @@ void test_L293DX_bwd()
 ***************************/
 
 //-------------------------------------------
-/***************************
 void test_L293DX()
 {
   motor.fwd(&X, 1000);
+/***************************
   _7X.disp4chars(STR_LFWD, 100);
-  motor.LFwd(1000);
+  motor.Lfwd(X, 1000);
   _7X.disp4chars(STR_LSTP, 100);
   motor.LStop(1000);
   _7X.disp4chars(STR_LBWD, 100);
@@ -141,7 +141,7 @@ void test_L293DX()
   motor.LStop(1000);
 
   _7X.disp4chars(STR_RFWD, 100);
-  motor.RFwd(1000);
+  motor.Rfwd(X, 1000);
   _7X.disp4chars(STR_RSTP, 100);
   motor.RStop(1000);
   _7X.disp4chars(STR_RBWD, 100);
@@ -150,7 +150,7 @@ void test_L293DX()
   motor.RStop(1000);
 
   _7X.disp4chars(STR_FWD, 100);
-  motor.fwd(1000);
+  motor.fwd(&X, 1000);
   _7X.disp4chars(STR_STOP, 100);
   motor.stop(1000);
   _7X.disp4chars(STR_BWD, 100);
@@ -175,9 +175,9 @@ void test_L293DX()
   motor.turnAntClk(TURN_ANT_CLOCK_DURATION, STOP_DURATION_AFTER_TURN);
   _7X.disp4chars(STR_STOP, 100);
   motor.stop(1000);
+***************************/
 }//test_L293DX
 
-***************************/
 
 /***************************
 //-------------------------------------------

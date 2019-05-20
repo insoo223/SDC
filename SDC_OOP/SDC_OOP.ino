@@ -11,8 +11,8 @@
 
 #include <trippleX.h>
 #include <Four7segX.h>
-/*
 #include <L293DX.h>
+/*
 #include <RTX.h>
 #include <DHT11X.h>
 #include <CD4021X.h>
@@ -50,10 +50,14 @@ byte digitPins[_7SEG_NUM_DIGITS] = {0x20, 0x21, 0x22, 0x23}; //(as of May 13, 20
 
 byte group595[MAXCHIP595];
 
-/*
-byte enable[2] = {10, 9};
-byte motorNode[4] = {0,1,3,2};
+//1st nibble for chip num of group of 74HC595, 2nd for pin num of a 74HC595(as of May 13, 2019)
+byte enable[2] = {0x3A, 0x39};
+
+//                 MLPpin, MLNpin, MRPpin, MRNpin 
+//Be aware about the assigned pin number for the right-side motors
+byte motorNode[4] = {0x30,   0x31,   0x33,   0x32};
 L293DX motor(enable,motorNode);
+/*
 RTX rt;
 DHT11X dht11;
 CD4021X cd4021;
@@ -104,9 +108,9 @@ void loop()
   //test_CD4021X();
   //test_DHT11X();
   //test_RTX();
-  //test_L293DX();
+  test_L293DX();
   //test_trippleX_7segChar();
   //test_trippleX_7segNum_UpsideDown();
-  test_trippleX_7segNum();
+  //test_trippleX_7segNum();
   //allSeg_trippleX();
 }//loop
