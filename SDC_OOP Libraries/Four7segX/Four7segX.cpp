@@ -85,7 +85,8 @@ Four7segX :: Four7segX(byte* segPins) //May 9, 2019
 		_segPins[i] = segPins[i];
 
 	_nightMode = false;
-    
+    //_numDigits = MAXDIG7SEG;
+	//_singleDigitDelay = SINGLE_DIGIT_DELAY;
 }//Four7segX
 
 void Four7segX :: setNumDigits(byte num)
@@ -285,7 +286,7 @@ Updated:
 		--> Save ATmega328P flash footprint by 38 bytes (HEX size from 3172 to 3134).
 			By calling test_trippleX_7segNum(); and running _7X.disp4digits(&X, i,0, 50); than _7X.disp4digits(i, 0, 50); in the Arduino source.
 		--> Change the calling pattern to the class because of using its instance as call-by reference argument.
-			From X.getCurrentX(num74HC595); to X->getCurrentX(num74HC595);
+			From X.getCurrentX(group595); to X->getCurrentX(group595);
 		2)  Use iteration in "Four7segX :: disp4digits" function
 		--> Save HEX size by 72 bytes: (HEX size from 3134 to 3062).
 
@@ -313,7 +314,7 @@ void Four7segX :: disp4digits(trippleX* X,int num, byte pos, byte duration)
 	byte n;
 
     //Byte pattern of parallel pins of each 74HC595 chip
-	byte num74HC595[MAXCHIP74HC595]; //array element 0 for botX, 1 for midX, 2 for topX 
+	byte group595[MAXCHIP74HC595]; //array element 0 for botX, 1 for midX, 2 for topX 
 
 	//eachDigit = malloc(sizeof(byte) * (_numDigits*2));
 	//for(k=0; k<MAXDIG7SEG; k++)
@@ -324,19 +325,19 @@ void Four7segX :: disp4digits(trippleX* X,int num, byte pos, byte duration)
     
 	//Get the byte patterns of the current 74HC595 parallel pins
 	//These will be updated to show "num" on the 4digit7segment LED
-	X->getCurrentX(num74HC595);
+	X->getCurrentX(group595);
 
 	//Eliminate a remnant display at the 1000s digit
 	//All the segments of the 7segment LEDare connected to the Top 74HC595, so 0x00 is engaged  at the Top 74HC595
 	//This fuction is dependent on the schematic
 	/*
-	num74HC595[MAXCHIP74HC595-1] = 0x00;
-	num74HC595[MAXCHIP74HC595-2] = _BV(_digitPins[MAXCHIP74HC595-1]);
-	num74HC595[MAXCHIP74HC595-3] = 0;
-	X->ctrlAll(num74HC595);
+	group595[MAXCHIP74HC595-1] = 0x00;
+	group595[MAXCHIP74HC595-2] = _BV(_digitPins[MAXCHIP74HC595-1]);
+	group595[MAXCHIP74HC595-3] = 0;
+	X->ctrlAll(group595);
 	*/
-	//X->ctrlAll_legacy (0x00, _BV(_digitKilos), num74HC595[0]);
-	//X->ctrlAll_legacy (0x00, _BV(_digitPins[MAXCHIP74HC595-1]), num74HC595[MAXCHIP74HC595-2]);
+	//X->ctrlAll_legacy (0x00, _BV(_digitKilos), group595[0]);
+	//X->ctrlAll_legacy (0x00, _BV(_digitPins[MAXCHIP74HC595-1]), group595[MAXCHIP74HC595-2]);
     
 	//display 1 to _numDigits digit on 7 segment LED
 	for(k=0; k<duration; k++)
@@ -345,7 +346,7 @@ void Four7segX :: disp4digits(trippleX* X,int num, byte pos, byte duration)
 		for(n=0; n < _numDigits; n++)
 		{
 
-			num74HC595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num, eachDigit[n]);
+			group595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num, eachDigit[n]);
 
 			//remove leading zeros for Tens and above
 			val=0;
@@ -355,20 +356,20 @@ void Four7segX :: disp4digits(trippleX* X,int num, byte pos, byte duration)
 					val += eachDigit[_numDigits-p];
 
 				if (val == 0)
-					num74HC595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num, BLANK_IDX);
+					group595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num, BLANK_IDX);
 				else
-					num74HC595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num, eachDigit[n]);
+					group595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num, eachDigit[n]);
 			}
 			//check DP on or off
 			if ( ((pos & simplePow(2, n)) >> n) == 1)
-				num74HC595[MAXCHIP74HC595-1] |= getTopX_Num(_7segABC_Num, DP_IDX);
+				group595[MAXCHIP74HC595-1] |= getTopX_Num(_7segABC_Num, DP_IDX);
 
 
-			X->ctrlAll_legacy (num74HC595[MAXCHIP74HC595-1], _BV(n) | num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
+			X->ctrlAll_legacy (group595[MAXCHIP74HC595-1], _BV(n) | group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
 			
 			if (_nightMode)
 			{
-				X->ctrlAll_legacy (num74HC595[MAXCHIP74HC595-1], ~_BV(n) & num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
+				X->ctrlAll_legacy (group595[MAXCHIP74HC595-1], ~_BV(n) & group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
 				delay(NIGHT_BRIGHTNESS_DELAY);
 			}
 
@@ -378,11 +379,143 @@ void Four7segX :: disp4digits(trippleX* X,int num, byte pos, byte duration)
 	}//for k
 
     //eliminate a remnant display in K-unit
-	//X->ctrlAll_legacy(0,_BV(_digitKilos)  | num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
-	//X->ctrlAll_legacy(0,_BV(_digitPins[MAXCHIP74HC595-1])  | num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
+	//X->ctrlAll_legacy(0,_BV(_digitKilos)  | group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
+	//X->ctrlAll_legacy(0,_BV(_digitPins[MAXCHIP74HC595-1])  | group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
 	
 }//disp4digits
 
+/*----------------------------------------------------------
+Function Name: 
+	setChip595
+Purpose: 
+	Display an integer on 4 (or multiple) digits 7segment LED of common cathode type.
+How to:
+	1. 
+	2. 
+	3. 
+Arguments:
+	Output
+		byte* getGroup595pattern - byte array for multiple 74HC595
+	Input
+		trippleX* X - Class instance for multiple 74HC595
+		byte* segVal - Array of segment values for numbers
+		byte num - Number to be displayed on a sigle digit 
+Updated: 
+	May 8, 2019 (Wed)
+Created: 
+	May 13, 2019 (Mon)
+Limitation:
+Ref:
+----------------------------------------------------------*/
+
+void Four7segX :: setChip595(trippleX* X, byte chipID, byte pinID, byte val)
+{
+	byte grp595[MAXCHIP74HC595];
+	
+	X->getCurrentX(grp595);
+	if (val == 1)
+		//grp595[MAXCHIP74HC595-chipID] |= (1<<pinID);
+		grp595[MAXCHIP74HC595-chipID] |= _BV(pinID);
+	else
+		grp595[MAXCHIP74HC595-chipID] &= ~_BV(pinID);
+
+	X->updateX(grp595);
+
+}//setChip595
+
+/*----------------------------------------------------------
+Function Name: 
+	getGroup595pattern
+Purpose: 
+	Display an integer on 4 (or multiple) digits 7segment LED of common cathode type.
+How to:
+	1. 
+	2. 
+	3. 
+Arguments:
+	Output
+		byte* getGroup595pattern - byte array for multiple 74HC595
+	Input
+		trippleX* X - Class instance for multiple 74HC595
+		byte* segVal - Array of segment values for numbers
+		byte num - Number to be displayed on a sigle digit 
+Updated: 
+	May 8, 2019 (Wed)
+Created: 
+	May 13, 2019 (Mon)
+Limitation:
+Ref:
+----------------------------------------------------------*/
+
+void Four7segX :: setGroup595pattern(trippleX* X, byte* segVal, byte num, byte digit)
+{
+	byte i;
+	byte chip595;
+	byte pin595;
+	byte aByte;
+
+	aByte = segVal[num];
+	for(i=0; i<MAXSEG; i++)
+	{
+		//if ( ( (segVal[num] >> i) & 0x01) == 1)
+		//if ( ( (0b01001111 >> i ) & 0x01) == 1)
+		chip595 = (_segPins[i] >> SECTOR_BIT_LOCATION_74HC595) & 0x0F;
+		pin595 = _segPins[i] & 0x0F;
+		if ( ( (aByte >> i) & 0x01) == 1)
+			setChip595(X, chip595, pin595, 1);
+		else
+			setChip595(X, chip595, pin595, 0);
+
+	}
+	setChip595(X, 2, digit, 1);
+}//setGroup595pattern
+
+void Four7segX :: dispMdigits(trippleX* X,int num, byte pos, byte duration)
+{
+    //Decomposition of input arg."num"
+	byte eachDigit[MAXDIG7SEG]; //array element 0 for 10^0, 1 for 10^1, 2 for 10^2, 3 for 10^3
+	//byte *eachDigit;
+	int val;
+	byte k;
+	byte p;
+	byte d;
+
+    //Byte pattern of parallel pins of each 74HC595 chip
+	byte group595[MAXCHIP74HC595]; //array element 0 for botX, 1 for midX, 2 for topX 
+
+	//Get the number for each digit position
+	decomposeNum(num, eachDigit);
+    
+	//Get the byte patterns of the current 74HC595 parallel pins
+	//These will be updated to show "num" on the 4digit7segment LED
+	//X->getCurrentX(group595);
+
+	//display 1 to _numDigits digit on 7 segment LED
+	for(k=0; k<duration; k++)
+    {
+		//display each digit of 7 segment LED
+		for(d=0; d < _numDigits; d++)
+		{
+			setGroup595pattern(X, _7segABC_Num, eachDigit[d], d);
+			//X->ctrlAll_legacy (group595[MAXCHIP74HC595-1], _BV(n) | group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
+			//group595[MAXCHIP74HC595-1] = 0xFF; //getTopX_Num(_7segABC_Num,2);
+			//group595[MAXCHIP74HC595-1] = 0b01011011;
+			/*
+			group595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num,0);
+			group595[MAXCHIP74HC595-2] = simplePow(2,d);
+			group595[MAXCHIP74HC595-3] = 0x00;
+			X->updateX(group595);
+			*/
+
+			X->ctrlAll();
+			//X->ctrlAll_legacy(group595[MAXCHIP74HC595-1], group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
+
+			delay(_singleDigitDelay);
+		}//for n
+
+	}//for k
+	
+}//dispMdigits
 
 /*----------------------------------------------------------
 Function Name: 
@@ -402,7 +535,7 @@ Updated:
 		--> Save ATmega328P flash footprint by 400 bytes (HEX size from 3212 to 2812).
 			By calling test_trippleX_7segChar(); and running _7X.disp4chars(&X, "ABCD", 200); than _7X.disp4chars_legacy("ABCD", 200); in the Arduino source.
 		--> Change the calling pattern to the class because of using its instance as call-by reference argument.
-			From X.getCurrentX(num74HC595); to X->getCurrentX(num74HC595);
+			From X.getCurrentX(group595); to X->getCurrentX(group595);
 		2)  Use iteration in "Four7segX :: disp4digits" function
 		--> Save HEX size by ?? bytes: (HEX size from ?? to ??).
 
@@ -420,26 +553,26 @@ Ref:
 void Four7segX :: disp4chars(trippleX* X, char* str, int duration)
 {
     //byte topX, midX, botX;
-	byte num74HC595[MAXCHIP74HC595];
+	byte group595[MAXCHIP74HC595];
 	byte k;
 	byte n;
     
     //trippleX X;
     
     //X.getCurrentX_legacy(&topX, &midX, &botX);
-	X->getCurrentX(num74HC595);
+	X->getCurrentX(group595);
     
     for (k=0; k<duration; k++)
     {
 		//display each char of 7 segment LED
 		for(n=0; n<_numDigits; n++)
 		{
-			num74HC595[MAXCHIP74HC595-1] = getTopX_ABC(str[_numDigits-1-n]);
-			X->ctrlAll_legacy (num74HC595[MAXCHIP74HC595-1], _BV(n) | num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
+			group595[MAXCHIP74HC595-1] = getTopX_ABC(str[_numDigits-1-n]);
+			X->ctrlAll_legacy (group595[MAXCHIP74HC595-1], _BV(n) | group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
 
 			if (_nightMode)
 			{
-				X->ctrlAll_legacy (num74HC595[MAXCHIP74HC595-1], ~_BV(n) & num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
+				X->ctrlAll_legacy (group595[MAXCHIP74HC595-1], ~_BV(n) & group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
 				delay(NIGHT_BRIGHTNESS_DELAY);
 			}
 
@@ -448,8 +581,8 @@ void Four7segX :: disp4chars(trippleX* X, char* str, int duration)
     }//for k
 
 	//eliminate a remnant display in K-unit
-    //X->ctrlAll_legacy(0,_BV(_digitKilos)  | num74HC595[1], num74HC595[0]);
-	X->ctrlAll_legacy(0,_BV(_digitPins[MAXCHIP74HC595-1])  | num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
+    //X->ctrlAll_legacy(0,_BV(_digitKilos)  | group595[1], group595[0]);
+	X->ctrlAll_legacy(0,_BV(_digitPins[MAXCHIP74HC595-1])  | group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
 }//disp4chars
 
 /*----------------------------------------------------------
@@ -473,7 +606,7 @@ Updated:
 		--> Save ATmega328P flash footprint by ?? bytes (HEX size from ?? to ??).
 			By calling test_trippleX_7segNum_UpsideDown(); and running _7X.disp4digits_UpsideDown(&X, i,0, 50); than _7X.disp4digits(i, 0, 50); in the Arduino source.
 		--> Change the calling pattern to the class because of using its instance as call-by reference argument.
-			From X.getCurrentX(num74HC595); to X->getCurrentX(num74HC595);
+			From X.getCurrentX(group595); to X->getCurrentX(group595);
 		2)  Use iteration in "Four7segX :: disp4digits_UpsideDown" function
 		--> Save HEX size by ?? bytes: (HEX size from ?? to ??).
 
@@ -499,7 +632,7 @@ void Four7segX :: disp4digits_UpsideDown(trippleX* X, int num, int pos, int dura
 	byte p;
 	byte n;
     //Byte pattern of 74HC595 parallel pins
-	byte num74HC595[MAXCHIP74HC595]; //array element 0 for botX, 1 for midX, 2 for topX 
+	byte group595[MAXCHIP74HC595]; //array element 0 for botX, 1 for midX, 2 for topX 
     
 	//eachDigit = malloc(sizeof(byte) * (_numDigits+1));//HEX 3130 -> 3664 by using malloc than fixed array
 	//for(k=0; k<_numDigits+1; k++)
@@ -510,7 +643,7 @@ void Four7segX :: disp4digits_UpsideDown(trippleX* X, int num, int pos, int dura
     
 	//Get the byte patterns of the current 74HC595 parallel pins
 	//These will be updated to show "num" on the 4digit7segment LED
-	X->getCurrentX(num74HC595);
+	X->getCurrentX(group595);
 
 	//Do not need to eliminate a remnant display at the 1000s digit
 	//For some reason, there's NO residual display.
@@ -522,7 +655,7 @@ void Four7segX :: disp4digits_UpsideDown(trippleX* X, int num, int pos, int dura
 		for(n=0; n<_numDigits; n++)
 		{
 
-			num74HC595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, eachDigit[n]);
+			group595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, eachDigit[n]);
 
 			//remove leading zeros for Tens and above
 			//NOT yet removed as of May 8, 2019
@@ -533,20 +666,20 @@ void Four7segX :: disp4digits_UpsideDown(trippleX* X, int num, int pos, int dura
 					val += eachDigit[_numDigits-1-p];
 
 				if (val == 0)
-					num74HC595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, BLANK_IDX);
+					group595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, BLANK_IDX);
 				else
-					num74HC595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, eachDigit[n]);
+					group595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, eachDigit[n]);
 			}
 			//check DP on or off
 			if ( ((pos & simplePow(2, n)) >> n) == 1)
-				num74HC595[MAXCHIP74HC595-1] |= getTopX_Num(_7segABC_Num_UpsideDown, DP_IDX);
+				group595[MAXCHIP74HC595-1] |= getTopX_Num(_7segABC_Num_UpsideDown, DP_IDX);
 
 
-			X->ctrlAll_legacy (num74HC595[MAXCHIP74HC595-1], _BV(_numDigits-1-n) | num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
+			X->ctrlAll_legacy (group595[MAXCHIP74HC595-1], _BV(_numDigits-1-n) | group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
 
 			if (_nightMode)
 			{
-				X->ctrlAll_legacy (num74HC595[MAXCHIP74HC595-1], ~_BV(n) & num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
+				X->ctrlAll_legacy (group595[MAXCHIP74HC595-1], ~_BV(n) & group595[MAXCHIP74HC595-2], group595[MAXCHIP74HC595-3]);
 				delay(NIGHT_BRIGHTNESS_DELAY);
 			}
 

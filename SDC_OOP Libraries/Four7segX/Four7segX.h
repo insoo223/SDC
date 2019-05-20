@@ -28,6 +28,7 @@ Ref:
 #define MAXSEG 8 // number of segments of a 7 segment LED 
 #define SEG_DISP_DELAY 200 // [ms]
 #define MAXDIG7SEG 4 //number of digits in your multiple digit 7 segment LED
+#define SINGLE_DIGIT_DELAY 4
 //----------------------------------------------
 //--- Pin assignments of transistors driving common cathode of four digits of 7 segment LEDs.
 //--- Each of the defined number represents Q-pin of the middle of tripple 74HC595s
@@ -52,6 +53,11 @@ public:
 
 	void dispAllSegs(trippleX* X, byte numUnit);
 	void disp4digits(trippleX* X, int num, byte pos, byte duration);
+	
+	void setChip595(trippleX* X, byte chipID, byte pinID, byte val);
+	void setGroup595pattern(trippleX* X, byte* segVal, byte num, byte digit);
+	void dispMdigits(trippleX* X,int num, byte pos, byte duration);
+
     void disp4chars(trippleX* X, char* str, int duration);
 	void disp4digits_UpsideDown(trippleX* X, int num, int pos, int duration);
 
@@ -76,7 +82,7 @@ private:
     //byte _74HC595pin[8] = {5, 6, 1, 7, 2, 4, 3, 0};  // ver01
     //byte _74HC595pin[8];  // ver02
 	//byte _74HC595pin[8];  // ver02
-	byte _segPins[8];
+	byte _segPins[MAXSEG];
 	
 	/*
 	byte _digitOnes;		// Units(1s) digit control pin

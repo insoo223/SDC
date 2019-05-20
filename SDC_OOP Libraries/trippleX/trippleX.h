@@ -43,7 +43,8 @@ public:
 
 	void getCurrentX(byte *num74HC595);
     void getCurrentX_legacy(uint8_t *topX, uint8_t *midX, uint8_t *botX);
-	void ctrlAll(byte *pos74HC595);
+	//void ctrlAll(byte *pos74HC595);
+	void ctrlAll();
     void ctrlAll_legacy(uint8_t topX, uint8_t midX, uint8_t botX);
 
 	void ctrlSingle(uint8_t ctrlID, uint8_t state);

@@ -74,13 +74,14 @@ void trippleX ::getCurrentX_legacy(uint8_t *topX, uint8_t *midX, uint8_t *botX)
 //-----------------------------------------------
 // byte-oriented control for 74HC595
 //void trippleX :: ctrlAll(uint8_t topX, uint8_t midX, uint8_t botX)
-void trippleX :: ctrlAll(byte *pos74HC595)
+//void trippleX :: ctrlAll(byte *pos74HC595)
+void trippleX :: ctrlAll()
 {
 	byte i;
     
 	digitalWrite(_l, LOW);
 	for(i=0; i<MAXCHIP74HC595; i++)
-		shiftOut(_d, _c, MSBFIRST, pos74HC595[i]);
+		shiftOut(_d, _c, MSBFIRST, _curX[i]);
     digitalWrite(_l, HIGH);
     
     //updateX(topX, midX, botX); //if execute, remnant display on K-unit
@@ -169,7 +170,7 @@ void trippleX :: ctrlSingle(uint8_t ctrlID, uint8_t state)
 	updateX(num74HC595);
             
     //ctrlAll_legacy(gCurTopX, gCurMidX, gCurBotX);
-	ctrlAll(num74HC595);
+	ctrlAll();
 
 }//ctrlSingle
 

@@ -6,8 +6,10 @@
 
   Updated on 10/29/15
 */
+#define MAXCHIP595 3
+#define MAXSEG 8
 #define _7SEG_NUM_DIGITS 4
-#define _7SEG_SINGLE_DIGIT_DELAY 4
+#define _7SEG_SINGLE_DIGIT_DELAY 500
 
 #define BWD_DURATION 200 // [ms]
 
