@@ -21,7 +21,7 @@ Ref:
 
 #include "Arduino.h"
 
-#define MAXNUM74HC595 3 //number of 74HC595 chips used for SDC
+#define MAXCHIP74HC595 3 //number of 74HC595 chips used for SDC
 
 // Bit location of 74HC595 sector
 // A "sector" tells which of three 74HC595 chips holds a corresponding signal: top, middle, or bottom
@@ -37,15 +37,21 @@ class trippleX
 {
 public:
 	trippleX(byte latchPin, byte clockPin, byte dataPin);
-    void updateX(uint8_t topX, uint8_t midX, uint8_t botX);
-	void getCurrentX(byte *pos74HC595);
+    
+	//void updateX(uint8_t topX, uint8_t midX, uint8_t botX);
+	void updateX(byte* num74HC595);
+
+	void getCurrentX(byte *num74HC595);
     void getCurrentX_legacy(uint8_t *topX, uint8_t *midX, uint8_t *botX);
 	void ctrlAll(byte *pos74HC595);
     void ctrlAll_legacy(uint8_t topX, uint8_t midX, uint8_t botX);
-    void ctrlSingle(uint8_t ctrlID, uint8_t state);
+
+	void ctrlSingle(uint8_t ctrlID, uint8_t state);
+	//void ctrlSingle_legacy(uint8_t ctrlID, uint8_t state);
+	
 private:
     uint8_t _l, _c, _d;
-	byte _curX[MAXNUM74HC595]; // May 8, 2019 (@ed) - Migrate from External var. to Private Class Members
+	byte _curX[MAXCHIP74HC595]; // May 8, 2019 (@ed) - Migrate from External var. to Private Class Members
 };
 
 

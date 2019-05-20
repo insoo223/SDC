@@ -24,11 +24,7 @@ Ref:
 #include "trippleX.h"
 #include "Four7segX.h"
 
-
-Four7segX :: Four7segX(byte A, byte B, byte C, byte D, byte E, byte F, byte G, byte DP)
-//					   byte digitOnes, byte digitTens, byte digitHundreds, byte digitKilos) // May 6, 2019 
-//Four7segX :: Four7segX(byte A, byte B, byte C, byte D, byte E, byte F, byte G, byte DP,
-//					   byte digitOnes, byte digitTens, byte digitHundreds, byte digitKilos) // May 6, 2019 
+Four7segX :: Four7segX(byte* segPins) //May 9, 2019 
 {
     _7segABC_Num[0] = 0b00111111; // DP_IDXGFEDCBA
     _7segABC_Num[1] = 0b00000110;
@@ -85,23 +81,8 @@ Four7segX :: Four7segX(byte A, byte B, byte C, byte D, byte E, byte F, byte G, b
     _7segABC_Alpha[25] = 0b01001001; //Z
     _7segABC_Alpha[26] = 0b00000000; //blank
     
-    //_A=0; _B=2; _C=6; _D=4; _E=3; _F=1; _G=7; _DP=5;
-	_A=A; _B=B; _C=C; _D=D; _E=E; _F=F; _G=G; _DP=DP;
-	/*
-	_digitOnes = digitOnes;
-    _digitTens = digitTens, 
-	_digitHundreds = digitHundreds;
-    _digitKilos = digitKilos, 
-	*/
-
-    _74HC595pin[0] = _A;
-    _74HC595pin[1] = _B;
-    _74HC595pin[2] = _C;
-    _74HC595pin[3] = _D;
-    _74HC595pin[4] = _E;
-    _74HC595pin[5] = _F;
-    _74HC595pin[6] = _G;
-    _74HC595pin[7] = _DP;
+	for(byte i=0; i<MAXSEG; i++)
+		_segPins[i] = segPins[i];
 
 	_nightMode = false;
     
@@ -117,7 +98,7 @@ byte Four7segX :: getNumDigits()
 	return(_numDigits);
 }//getNumDigits
 
-void Four7segX :: setPinDigits(byte* digitPins) // May 9, 2019 
+void Four7segX :: setDigitPins(byte* digitPins) // May 9, 2019 
 {
 	byte i;
 
@@ -256,6 +237,37 @@ void  Four7segX :: decomposeNum(int num, byte* eachDigit)
 
 /*----------------------------------------------------------
 Function Name: 
+	dispAllSegs
+Purpose: 
+	Display every segment on 4 (or multiple) digits 7segment LED of common cathode type.
+How to:
+	1. An input "num" will be decomposed as thousands, hundres, tens and ones.
+	2. The decomposed numbers will be shown up at each digit position very short time in a round-robin manner.
+	3. Human eyes recognize the four digits are lit up simultaneously rather than on & off sequentially.
+Arguments: 
+	trippleX* X - an instance of the class for handling 3 (or multiple) 74HC595 chips
+	byte numUnit - digit position of 4 (or multiple) digits 7segment LED
+Updated: 
+Created: 
+	May 9, 2019
+Limitation:
+Ref:
+----------------------------------------------------------*/
+void Four7segX :: dispAllSegs(trippleX* X, byte numUnit)
+{
+  byte m, aByte;
+  for(m=0; m<MAXSEG; m++)
+  {
+	aByte = simplePow(2,_segPins[m]);
+    X->ctrlAll_legacy(aByte, _BV(numUnit), 0);
+    delay(SEG_DISP_DELAY);
+    X->ctrlAll_legacy(0, _BV(numUnit), 0);
+    delay(SEG_DISP_DELAY);
+  }
+}// dispSeg_trippleX  
+
+/*----------------------------------------------------------
+Function Name: 
 	disp4digits
 Purpose: 
 	Display an integer on 4 (or multiple) digits 7segment LED of common cathode type.
@@ -300,8 +312,8 @@ void Four7segX :: disp4digits(trippleX* X,int num, byte pos, byte duration)
 	byte p;
 	byte n;
 
-    //Byte pattern of 74HC595 parallel pins
-	byte num74HC595[MAXNUM74HC595]; //array element 0 for botX, 1 for midX, 2 for topX 
+    //Byte pattern of parallel pins of each 74HC595 chip
+	byte num74HC595[MAXCHIP74HC595]; //array element 0 for botX, 1 for midX, 2 for topX 
 
 	//eachDigit = malloc(sizeof(byte) * (_numDigits*2));
 	//for(k=0; k<MAXDIG7SEG; k++)
@@ -318,22 +330,22 @@ void Four7segX :: disp4digits(trippleX* X,int num, byte pos, byte duration)
 	//All the segments of the 7segment LEDare connected to the Top 74HC595, so 0x00 is engaged  at the Top 74HC595
 	//This fuction is dependent on the schematic
 	/*
-	num74HC595[MAXNUM74HC595-1] = 0x00;
-	num74HC595[MAXNUM74HC595-2] = _BV(_digitKilos);
-	num74HC595[MAXNUM74HC595-3] = 0;
+	num74HC595[MAXCHIP74HC595-1] = 0x00;
+	num74HC595[MAXCHIP74HC595-2] = _BV(_digitPins[MAXCHIP74HC595-1]);
+	num74HC595[MAXCHIP74HC595-3] = 0;
 	X->ctrlAll(num74HC595);
 	*/
 	//X->ctrlAll_legacy (0x00, _BV(_digitKilos), num74HC595[0]);
-	X->ctrlAll_legacy (0x00, _BV(_digitPins[MAXNUM74HC595-1]), num74HC595[MAXNUM74HC595-2]);
+	//X->ctrlAll_legacy (0x00, _BV(_digitPins[MAXCHIP74HC595-1]), num74HC595[MAXCHIP74HC595-2]);
     
 	//display 1 to _numDigits digit on 7 segment LED
 	for(k=0; k<duration; k++)
     {
 		//display each digit of 7 segment LED
-		for(n=0; n<_numDigits; n++)
+		for(n=0; n < _numDigits; n++)
 		{
 
-			num74HC595[MAXNUM74HC595-1] = getTopX_Num(_7segABC_Num, eachDigit[n]);
+			num74HC595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num, eachDigit[n]);
 
 			//remove leading zeros for Tens and above
 			val=0;
@@ -343,20 +355,20 @@ void Four7segX :: disp4digits(trippleX* X,int num, byte pos, byte duration)
 					val += eachDigit[_numDigits-p];
 
 				if (val == 0)
-					num74HC595[MAXNUM74HC595-1] = getTopX_Num(_7segABC_Num, BLANK_IDX);
+					num74HC595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num, BLANK_IDX);
 				else
-					num74HC595[MAXNUM74HC595-1] = getTopX_Num(_7segABC_Num, eachDigit[n]);
+					num74HC595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num, eachDigit[n]);
 			}
 			//check DP on or off
 			if ( ((pos & simplePow(2, n)) >> n) == 1)
-				num74HC595[MAXNUM74HC595-1] |= getTopX_Num(_7segABC_Num, DP_IDX);
+				num74HC595[MAXCHIP74HC595-1] |= getTopX_Num(_7segABC_Num, DP_IDX);
 
 
-			X->ctrlAll_legacy (num74HC595[MAXNUM74HC595-1], _BV(n) | num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
+			X->ctrlAll_legacy (num74HC595[MAXCHIP74HC595-1], _BV(n) | num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
 			
 			if (_nightMode)
 			{
-				X->ctrlAll_legacy (num74HC595[MAXNUM74HC595-1], ~_BV(n) & num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
+				X->ctrlAll_legacy (num74HC595[MAXCHIP74HC595-1], ~_BV(n) & num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
 				delay(NIGHT_BRIGHTNESS_DELAY);
 			}
 
@@ -366,8 +378,8 @@ void Four7segX :: disp4digits(trippleX* X,int num, byte pos, byte duration)
 	}//for k
 
     //eliminate a remnant display in K-unit
-	//X->ctrlAll_legacy(0,_BV(_digitKilos)  | num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
-	X->ctrlAll_legacy(0,_BV(_digitPins[MAXNUM74HC595-1])  | num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
+	//X->ctrlAll_legacy(0,_BV(_digitKilos)  | num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
+	//X->ctrlAll_legacy(0,_BV(_digitPins[MAXCHIP74HC595-1])  | num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
 	
 }//disp4digits
 
@@ -408,7 +420,7 @@ Ref:
 void Four7segX :: disp4chars(trippleX* X, char* str, int duration)
 {
     //byte topX, midX, botX;
-	byte num74HC595[MAXNUM74HC595];
+	byte num74HC595[MAXCHIP74HC595];
 	byte k;
 	byte n;
     
@@ -422,12 +434,12 @@ void Four7segX :: disp4chars(trippleX* X, char* str, int duration)
 		//display each char of 7 segment LED
 		for(n=0; n<_numDigits; n++)
 		{
-			num74HC595[MAXNUM74HC595-1] = getTopX_ABC(str[_numDigits-1-n]);
-			X->ctrlAll_legacy (num74HC595[MAXNUM74HC595-1], _BV(n) | num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
+			num74HC595[MAXCHIP74HC595-1] = getTopX_ABC(str[_numDigits-1-n]);
+			X->ctrlAll_legacy (num74HC595[MAXCHIP74HC595-1], _BV(n) | num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
 
 			if (_nightMode)
 			{
-				X->ctrlAll_legacy (num74HC595[MAXNUM74HC595-1], ~_BV(n) & num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
+				X->ctrlAll_legacy (num74HC595[MAXCHIP74HC595-1], ~_BV(n) & num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
 				delay(NIGHT_BRIGHTNESS_DELAY);
 			}
 
@@ -437,7 +449,7 @@ void Four7segX :: disp4chars(trippleX* X, char* str, int duration)
 
 	//eliminate a remnant display in K-unit
     //X->ctrlAll_legacy(0,_BV(_digitKilos)  | num74HC595[1], num74HC595[0]);
-	X->ctrlAll_legacy(0,_BV(_digitPins[MAXNUM74HC595-1])  | num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
+	X->ctrlAll_legacy(0,_BV(_digitPins[MAXCHIP74HC595-1])  | num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
 }//disp4chars
 
 /*----------------------------------------------------------
@@ -487,7 +499,7 @@ void Four7segX :: disp4digits_UpsideDown(trippleX* X, int num, int pos, int dura
 	byte p;
 	byte n;
     //Byte pattern of 74HC595 parallel pins
-	byte num74HC595[MAXNUM74HC595]; //array element 0 for botX, 1 for midX, 2 for topX 
+	byte num74HC595[MAXCHIP74HC595]; //array element 0 for botX, 1 for midX, 2 for topX 
     
 	//eachDigit = malloc(sizeof(byte) * (_numDigits+1));//HEX 3130 -> 3664 by using malloc than fixed array
 	//for(k=0; k<_numDigits+1; k++)
@@ -510,31 +522,31 @@ void Four7segX :: disp4digits_UpsideDown(trippleX* X, int num, int pos, int dura
 		for(n=0; n<_numDigits; n++)
 		{
 
-			num74HC595[MAXNUM74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, eachDigit[n]);
+			num74HC595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, eachDigit[n]);
 
 			//remove leading zeros for Tens and above
 			//NOT yet removed as of May 8, 2019
 			val=0;
-			if (n<MAXNUM74HC595-1)
+			if (n<MAXCHIP74HC595-1)
 			{
 				for(p=0; p<_numDigits-n+1; p++)
 					val += eachDigit[_numDigits-1-p];
 
 				if (val == 0)
-					num74HC595[MAXNUM74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, BLANK_IDX);
+					num74HC595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, BLANK_IDX);
 				else
-					num74HC595[MAXNUM74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, eachDigit[n]);
+					num74HC595[MAXCHIP74HC595-1] = getTopX_Num(_7segABC_Num_UpsideDown, eachDigit[n]);
 			}
 			//check DP on or off
 			if ( ((pos & simplePow(2, n)) >> n) == 1)
-				num74HC595[MAXNUM74HC595-1] |= getTopX_Num(_7segABC_Num_UpsideDown, DP_IDX);
+				num74HC595[MAXCHIP74HC595-1] |= getTopX_Num(_7segABC_Num_UpsideDown, DP_IDX);
 
 
-			X->ctrlAll_legacy (num74HC595[MAXNUM74HC595-1], _BV(_numDigits-1-n) | num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
+			X->ctrlAll_legacy (num74HC595[MAXCHIP74HC595-1], _BV(_numDigits-1-n) | num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
 
 			if (_nightMode)
 			{
-				X->ctrlAll_legacy (num74HC595[MAXNUM74HC595-1], ~_BV(n) & num74HC595[MAXNUM74HC595-2], num74HC595[MAXNUM74HC595-3]);
+				X->ctrlAll_legacy (num74HC595[MAXCHIP74HC595-1], ~_BV(n) & num74HC595[MAXCHIP74HC595-2], num74HC595[MAXCHIP74HC595-3]);
 				delay(NIGHT_BRIGHTNESS_DELAY);
 			}
 
@@ -562,7 +574,7 @@ byte Four7segX :: getTopX_Num(byte* numArray, byte num)
     for (i=0; i<8; i++)
         if ( (targetByte >> i) & 0x01 )
 		//if (targetByte >> i)
-            topByte |= 1 << _74HC595pin[i];
+            topByte |= 1 << _segPins[i];
     
     return (topByte);
 } //getTopX_Num
@@ -583,7 +595,7 @@ byte Four7segX :: getTopX_ABC(char C)
     // convert 7seg ABC byte into the byte for 74HC595 Q-pin
     for (i=0; i<8; i++)
         if ( (targetByte >> i) & 0x01 )
-            topByte |= 1 << _74HC595pin[i];
+            topByte |= 1 << _segPins[i];
     
     return (topByte);
 } //getTopX_ABC

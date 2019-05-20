@@ -42,6 +42,26 @@ void test_trippleX()
 }//test_trippleX  
 
 //-------------------------------------------
+// 7 segment LEDs (Every segments)
+//-------------------------------------------
+void test_trippleX_7segEachSeg()
+{
+  for(byte i=0; i<8; i++)
+  {
+    X.ctrlSingle(0x20+segPins[i],HIGH);
+    X.ctrlSingle(0x10,HIGH); 
+    delay(500);
+  }
+}
+
+void allSeg_trippleX()
+{
+  for(byte i=0; i<4; i++)
+    //dispSeg_trippleX(i);
+    _7X.dispAllSegs(&X, i);
+}//allSeg_trippleX
+
+//-------------------------------------------
 // 7 segment LEDs (4 digits)
 //-------------------------------------------
 // Seen from the car rear side(default aspect). Display from 0 to 9999. Takes time.
@@ -100,11 +120,11 @@ void test_L293DX_bwd()
 }//test_L293DX_bwd
 ***************************/
 
-/***************************
 //-------------------------------------------
 void test_L293DX()
 {
-
+  motor.fwd(&X, 1000);
+/***************************
   _7X.disp4chars(STR_LFWD, 100);
   motor.LFwd(1000);
   _7X.disp4chars(STR_LSTP, 100);
@@ -149,8 +169,8 @@ void test_L293DX()
   motor.turnAntClk(TURN_ANT_CLOCK_DURATION, STOP_DURATION_AFTER_TURN);
   _7X.disp4chars(STR_STOP, 100);
   motor.stop(1000);
-}//test_L293DX
 ***************************/
+}//test_L293DX
 
 
 /***************************

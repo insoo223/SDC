@@ -24,6 +24,9 @@ Ref:
 
 #define BLANK_IDX 10
 #define DP_IDX 11
+
+#define MAXSEG 8 // number of segments of a 7 segment LED 
+#define SEG_DISP_DELAY 200 // [ms]
 #define MAXDIG7SEG 4 //number of digits in your multiple digit 7 segment LED
 //----------------------------------------------
 //--- Pin assignments of transistors driving common cathode of four digits of 7 segment LEDs.
@@ -42,11 +45,12 @@ Ref:
 class Four7segX
 {
 public:
-	Four7segX(byte A, byte B, byte C, byte D, byte E, byte F, byte G, byte DP);
+	Four7segX(byte* segPins);
 	void setNumDigits(byte num);
 	byte getNumDigits();
-	void setPinDigits(byte* digitPins);
+	void setDigitPins(byte* digitPins);
 
+	void dispAllSegs(trippleX* X, byte numUnit);
 	void disp4digits(trippleX* X, int num, byte pos, byte duration);
     void disp4chars(trippleX* X, char* str, int duration);
 	void disp4digits_UpsideDown(trippleX* X, int num, int pos, int duration);
@@ -64,8 +68,15 @@ private:
     byte getTopX_Num(byte* numArray, byte num);
     byte getTopX_ABC(char C);
 
-    byte _A, _B, _C, _D, _E, _F, _G, _DP; // segment control pin
 	byte _numDigits; //number of disits in multiple-digit 7 segment LED
+
+    // Variable depending on schematic
+    // Q-pin assignments for top X in trippleX,
+    //  beginning A to G & last one is for DP
+    //byte _74HC595pin[8] = {5, 6, 1, 7, 2, 4, 3, 0};  // ver01
+    //byte _74HC595pin[8];  // ver02
+	//byte _74HC595pin[8];  // ver02
+	byte _segPins[8];
 	
 	/*
 	byte _digitOnes;		// Units(1s) digit control pin
@@ -89,11 +100,6 @@ private:
     // Fixed regardless of schematic
     byte _7segABC_Alpha[27];
     
-    // Variable depending on schematic
-    // Q-pin assignments for top X in trippleX,
-    //  beginning A to G & last one is for DP
-    //byte _74HC595pin[8] = {5, 6, 1, 7, 2, 4, 3, 0};  // ver01
-    byte _74HC595pin[8];  // ver02
 };
 
 #endif /* Four7segX_h */
