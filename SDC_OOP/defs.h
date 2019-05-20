@@ -9,7 +9,7 @@
 #define MAXCHIP595 3
 #define MAXSEG 8
 #define _7SEG_NUM_DIGITS 4
-#define _7SEG_SINGLE_DIGIT_DELAY 500
+#define _7SEG_SINGLE_DIGIT_DELAY 5 // should be short enough to give a static view of multiple digits on 7 seg LED
 
 #define BWD_DURATION 200 // [ms]
 

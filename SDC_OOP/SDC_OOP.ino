@@ -29,16 +29,22 @@ include*******/
 
 trippleX X(6, 7, 8); //Arduino Pro Mini digital pins assigned to latch, clock, data pins of 74HC595
 
+// Variables are depending on schematic
+// Q-pin assignments for top X in trippleX,
+//  beginning A to G & last one is for DP
 // 74HC595pins assigned for 4digit 7seg LED: A-G, DP pins, and Digit pins
 // The numbers are for segment pins: 0 for QA, 1 for QB ... 7 for QH pin of 74HC595 (May 6, 2019)
 //                   A, B, C, D, E, F, G,DP            <--- segments of 74HC595
 //                  QA,QC,QG,QE,QD,QB,QH,QF            <--- connected to Top 74HC595 or num74HC595[MAXDIG7SEG-1]
-//byte segPins[8] = {0, 2, 6, 4, 3, 1, 7, 5}; //(as of May 9, 2019)
 //1st nibble for chip num of group of 74HC595, 2nd for pin num of a 74HC595(as of May 13, 2019)
 byte segPins[MAXSEG] = {0x10, 0x12, 0x16, 0x14, 0x13, 0x11, 0x17, 0x15}; 
-
 Four7segX _7X(segPins); //(as of May 9, 2019)
-//byte digitPins[_7SEG_NUM_DIGITS] = {0, 1, 2, 3}; //(as of May 9, 2019)
+
+//----------------------------------------------
+//--- Pin assignments of transistors driving common cathode of four digits of 7 segment LEDs.
+//--- Each of the defined number represents Q-pin of the middle of tripple 74HC595s
+//--- i.e. MAXCHIP74HC595-2 should be an array index for the middle of tripple or multiple 74HC595s.
+//----------------------------------------------
 byte digitPins[_7SEG_NUM_DIGITS] = {0x20, 0x21, 0x22, 0x23}; //(as of May 13, 2019)
 //                                  QA,QB,QC,QD <--- connected to Mid 74HC595 or num74HC595[MAXDIG7SEG-2]
 
@@ -61,6 +67,10 @@ void setup()
 {
   _7X.setNumDigits(_7SEG_NUM_DIGITS); //set number of digits in a multipl-digit 7 segment LED
   _7X.setDigitPins(digitPins); //set pins of each digit of a multipl-digit 7 segment LED
+
+  //The minimum continuous time[ms] for the state, HIGH or LOW, of each digit with unnoticeable flickering.
+  //Four digits look like to be shown simultaneously for their fast round-robin displaying.
+  //role replaced by the legacy gSingleDigitDelay
   _7X.setSingleDigitDelay(_7SEG_SINGLE_DIGIT_DELAY);
   
   //Set time to DS3231 RTC module

@@ -32,45 +32,39 @@ trippleX :: trippleX(byte latchPin, byte clockPin, byte dataPin)
     pinMode(_c,OUTPUT);
     pinMode(_d,OUTPUT);
 
-	//for (byte i=0; i<MAXCHIP74HC595; i++)
-	//	_curX[i] = 0;
-	_curX[0] = 0;
-	_curX[1] = 0;
-	_curX[2] = 0;
+	for (byte i=0; i<MAXCHIP74HC595; i++)
+		_curX[i] = 0;
 
 }//trippleX
 
 //-----------------------------------------------
 // maintain the most current top, middle, and bottom bytes of tripple 74HC595s
 //void trippleX :: updateX(uint8_t topX, uint8_t midX, uint8_t botX)
-void trippleX :: updateX(byte* num74HC595)
+void trippleX :: updateX(byte* group595)
 {
 	for (byte i=0; i<MAXCHIP74HC595; i++)
-		_curX[i] = num74HC595[i];
-	/*
-    gCurTopX = topX;
-    gCurMidX = midX;
-    gCurBotX = botX;
-	*/
+		_curX[i] = group595[i];
 }//updateX
 
 //-----------------------------------------------
 // get the most current top, middle, and bottom bytes of tripple 74HC595s
 //void trippleX :: getCurrentX(uint8_t *topX, uint8_t *midX, uint8_t *botX)
-void trippleX ::getCurrentX(byte *num74HC595)
+void trippleX ::getCurrentX(byte *group595)
 {
 	for (byte i=0; i<MAXCHIP74HC595; i++)
-		num74HC595[i] = _curX[i];
+		group595[i] = _curX[i];
 }//getCurrentX
 
 //-----------------------------------------------
 // get the most current top, middle, and bottom bytes of tripple 74HC595s
+/*
 void trippleX ::getCurrentX_legacy(uint8_t *topX, uint8_t *midX, uint8_t *botX)
 {
     *topX = gCurTopX;
     *midX = gCurMidX;
     *botX = gCurBotX;
 }//getCurrentX_legacy
+*/
 //-----------------------------------------------
 // byte-oriented control for 74HC595
 //void trippleX :: ctrlAll(uint8_t topX, uint8_t midX, uint8_t botX)
@@ -110,7 +104,7 @@ void trippleX :: ctrlAll_legacy(uint8_t topX, uint8_t midX, uint8_t botX)
 void trippleX :: ctrlSingle(uint8_t ctrlID, uint8_t state)
 {
     //uint8_t bottomByte, middleByte, topByte;
-	byte num74HC595[MAXCHIP74HC595];
+	byte group595[MAXCHIP74HC595];
 
     uint8_t sectorX, dataX;
     
@@ -127,9 +121,9 @@ void trippleX :: ctrlSingle(uint8_t ctrlID, uint8_t state)
 	{
 		if (i == sectorX)
 			if  (state == HIGH)
-				num74HC595[i] = _curX[i] | _BV(dataX);
+				group595[i] = _curX[i] | _BV(dataX);
 			else
-				num74HC595[i] = _curX[i] & ~_BV(dataX);
+				group595[i] = _curX[i] & ~_BV(dataX);
 	}
 
     /*
@@ -167,7 +161,7 @@ void trippleX :: ctrlSingle(uint8_t ctrlID, uint8_t state)
 
     //update the current bytes of tripple 74HC595s
     //updateX(topByte, middleByte, bottomByte);
-	updateX(num74HC595);
+	updateX(group595);
             
     //ctrlAll_legacy(gCurTopX, gCurMidX, gCurBotX);
 	ctrlAll();

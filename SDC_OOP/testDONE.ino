@@ -68,10 +68,10 @@ void allSeg_trippleX()
 void test_trippleX_7segNum()
 {
   //_7X.disp4digits(&X,5678,0, 40); // HEX size: 3172 bytes using decimalPow, 5138 bytes using Arduino std pow
-  _7X.dispMdigits(&X, 5678, 0x00, 10); 
+  //_7X.dispMdigits(&X, 1234, 0x00, 200); 
   //_7X.disp4digits_legacy(5678,0, 40); // HEX size: 2868 bytes
-  //for (int i=0; i<10000; i++)
-    //_7X.dispMdigits(&X, i, 0x00, 20); 
+  for (int i=0; i<10000; i++)
+      _7X.dispMdigits(&X, i, 0x00, 20); 
     //_7X.disp4digits(&X, i, 0x00, 20); // 3rd arg. is for DP (0x00: No DP, 0x01: Ones, 0x02: Tens, 0x04: H, 0x08: K)
                         // HEX size: 3134 bytes using the pointer of a Class instance in my library
                         // HEX size: 3062 bytes using iteration in "Four7segX :: disp4digits" function

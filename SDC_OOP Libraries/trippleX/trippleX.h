@@ -4,6 +4,7 @@ File Name:
 Purpose: 
 	Control tripple 74HC595 output expansion chips
 Updated: 
+	May 14, 2019 (Tue) - OOP Simplification Stage #1
 	May 06, 2019 (Mon) - parameterized 74HC595 pins for constructor  
 		1) Four7segX(); --> Four7segX(byte A, byte B, byte C, byte D, byte E, byte F, byte G, byte DP,
 				byte digitOnes, byte digitTens, byte digitHundreds, byte digitKilos); 
@@ -31,7 +32,7 @@ Ref:
 #define DATA_BITS_MASK_74HC595   0x07
 
 // global variable declared at Arduino sketch "globals" file 
-extern uint8_t gCurTopX, gCurMidX, gCurBotX;
+//extern uint8_t gCurTopX, gCurMidX, gCurBotX;
 
 class trippleX
 {
@@ -39,10 +40,10 @@ public:
 	trippleX(byte latchPin, byte clockPin, byte dataPin);
     
 	//void updateX(uint8_t topX, uint8_t midX, uint8_t botX);
-	void updateX(byte* num74HC595);
+	void updateX(byte* group595);
 
-	void getCurrentX(byte *num74HC595);
-    void getCurrentX_legacy(uint8_t *topX, uint8_t *midX, uint8_t *botX);
+	void getCurrentX(byte *group595);
+    //void getCurrentX_legacy(uint8_t *topX, uint8_t *midX, uint8_t *botX);
 	//void ctrlAll(byte *pos74HC595);
 	void ctrlAll();
     void ctrlAll_legacy(uint8_t topX, uint8_t midX, uint8_t botX);

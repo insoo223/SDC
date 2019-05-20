@@ -4,11 +4,9 @@ File Name:
 Purpose: 
 	Control 4 digits 7 segment LED on tripple 74HC595
 Updated: 
+	May 14, 2019 (Tue) - OOP Simplification Stage #1
 	May 06, 2019 (Mon) - parameterized 74HC595 pins for constructor  
-		1) Four7segX(); --> Four7segX(byte A, byte B, byte C, byte D, byte E, byte F, byte G, byte DP,
-				byte digitOnes, byte digitTens, byte digitHundreds, byte digitKilos); 
-		2) #define DIGIT_K_PIN 3 --> byte _digitKilos; (as well as other digit pins)
-	10/29/15 - optimization 1st round
+	Oct 29, 2015 - optimization 1st round
 Created: 
 	By Insoo Kim (insoo@hotmail.com) on Oct 24, 2015
 Advantage:
@@ -22,25 +20,15 @@ Ref:
 #include "Arduino.h"
 #include "trippleX.h"
 
-#define BLANK_IDX 10
-#define DP_IDX 11
+#define BLANK_IDX 10 //array index for _7segABC_Num to represent All Blank of 7 Seg
+#define DP_IDX 11    //array index for _7segABC_Num to represent Decimal Point of 7 Seg
 
 #define MAXSEG 8 // number of segments of a 7 segment LED 
 #define SEG_DISP_DELAY 200 // [ms]
 #define MAXDIG7SEG 4 //number of digits in your multiple digit 7 segment LED
-#define SINGLE_DIGIT_DELAY 4
-//----------------------------------------------
-//--- Pin assignments of transistors driving common cathode of four digits of 7 segment LEDs.
-//--- Each of the defined number represents Q-pin of the middle of tripple 74HC595s
-//----------------------------------------------
-
-
-//The minimum continuous time[ms] for the state, HIGH or LOW, of each digit with unnoticeable flickering.
-//Four digits look like to be shown simultaneously for their fast round-robin displaying.
-//#define SINGLE_DIGIT_DELAY 4 //role replaced by gSingleDigitDelay
 
 //LED birightness is dimed in night time, by off the digit for this duration[ms]
-#define NIGHT_BRIGHTNESS_DELAY 3
+#define NIGHT_BRIGHTNESS_DELAY 0
 
 
 class Four7segX
@@ -61,8 +49,8 @@ public:
     void disp4chars(trippleX* X, char* str, int duration);
 	void disp4digits_UpsideDown(trippleX* X, int num, int pos, int duration);
 
-	void setSingleDigitDelay(byte num);
-	byte getSingleDigitDelay();
+	void setSingleDigitDelay(int num);
+	int getSingleDigitDelay();
 
 	void setNightMode(bool mode);
 	bool getNightMode();
@@ -76,19 +64,13 @@ private:
 
 	byte _numDigits; //number of disits in multiple-digit 7 segment LED
 
-    // Variable depending on schematic
-    // Q-pin assignments for top X in trippleX,
-    //  beginning A to G & last one is for DP
-    //byte _74HC595pin[8] = {5, 6, 1, 7, 2, 4, 3, 0};  // ver01
-    //byte _74HC595pin[8];  // ver02
-	//byte _74HC595pin[8];  // ver02
 	byte _segPins[MAXSEG];
 	
-	/*
-	byte _digitOnes;		// Units(1s) digit control pin
-	byte _digitTens;		// Tens(10s) digit control pin
-	byte _digitHundreds;  // Hundres(100s) digit control pin
-	byte _digitKilos;		// Kilo(1000s) digit control pin
+	/* Using 4 digit 7 segment LED,
+	MAXDIG7SEG-1 for Kilo(1000s) digit control pin
+	MAXDIG7SEG-2 for Hundres(100s) digit control pin
+	MAXDIG7SEG-3 for Tens(10s) digit control pin
+	MAXDIG7SEG-4 Units(1s) digit control pin
 	*/
 	byte _digitPins[MAXDIG7SEG];
 
