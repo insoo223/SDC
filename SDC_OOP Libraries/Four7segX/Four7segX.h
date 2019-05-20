@@ -35,7 +35,8 @@
 //#define SINGLE_DIGIT_DELAY 4 //role replaced by gSingleDigitDelay
 
 //LED birightness is dimed in night time, by off the digit for this duration[ms]
-#define NIGHT_BRIGHTNESS_DELAY 5
+//#define NIGHT_BRIGHTNESS_DELAY 5 //For 16Mhz, 5V Arduino Pro Mini (May 20, 2019)
+#define NIGHT_BRIGHTNESS_DELAY 2 //For 8Mhz, 3.3V Arduino Pro Mini (May 20, 2019)
 
 //----------------------------------------------
 //--- Global variable declared at Arduino sketch "globals" file

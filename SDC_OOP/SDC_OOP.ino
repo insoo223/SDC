@@ -55,7 +55,12 @@ void loop()
   //Production-time code requires only the following single statement!
   //To test SDC_tandem328P for it has NO RTC
   //   so that, night time brightness cannot be controlled.
-  //gNightMode = false;
+  // (Added following comments on May 20, 2019)
+  //Also, "#define NIGHT_BRIGHTNESS_DELAY 5" at Four7segX.h in the Arduino libraries 
+  //  is For 16Mhz, 5V Arduino Pro Mini 
+  //  Using 8Mhz, 3.3V Arduino Pro Mini, it should be modifed as 2 or less, if not flickering
+  gNightMode = false;
+  //gNightMode = true;
   menu.selectOpMode();
   
   //test_Master();
@@ -65,8 +70,9 @@ void loop()
   //test_CD4021X();
   //test_DHT11X();
   //test_RTX();
-  //test_L293DX();
+  //Fucntions below can be applicable to SeeedStudio PCB (comments added on May 20, 2019)
+  //test_L293DX(); 
   //test_trippleX_7segNum_UpsideDown();
-  //test_trippleX_7segNum();
   //test_trippleX_7segChar();
+  //test_trippleX_7segNum();
 }//loop
