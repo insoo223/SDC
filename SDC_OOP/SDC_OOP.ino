@@ -12,7 +12,8 @@
 #include <trippleX.h>
 #include <Four7segX.h>
 #include <L293DX.h>
-#include <RTX.h>
+//#include <RTX.h>
+//#include <RTDS1307X.h>
 #include <DHT11X.h>
 #include <CD4021X.h>
 #include <IRX.h>
@@ -30,7 +31,8 @@ trippleX X;
 //the following 8 numbers: A-G & DP pin from 74HC595 of the middle of trippleX
 Four7segX _7X;
 L293DX motor;
-RTX rt;
+//RTX rt;
+//RTDS1307X rt1307;
 DHT11X dht11;
 CD4021X cd4021;
 IRX ir;
@@ -42,9 +44,10 @@ void setup()
 {
   //Set time to DS3231 RTC module
   //rt.setDS3231time(30,35,11,5,19,5,17);
+  //rt1307.setupDS1307();
 
   Serial.begin(9600);
-  rt.dispBrightnessCtrl();
+  //rt.dispBrightnessCtrl();
   
   X.ctrlAll(0,0,0);
 
@@ -68,11 +71,12 @@ void loop()
   //test_IRX_initEEPROM();
   //test_IRX_getPure_Single();
   //test_CD4021X();
-  //test_DHT11X();
+  test_DHT11X();
+  //test_RTDS1307X();
   //test_RTX();
   //Fucntions below can be applicable to SeeedStudio PCB (comments added on May 20, 2019)
   //test_L293DX(); 
   //test_trippleX_7segNum_UpsideDown();
-  test_trippleX_7segChar();
+  //test_trippleX_7segChar();
   //test_trippleX_7segNum();
 }//loop

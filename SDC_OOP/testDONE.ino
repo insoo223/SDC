@@ -143,12 +143,21 @@ void test_L293DX()
 }//test_L293DX
 
 //-------------------------------------------
+// Real-time clock with DS1307 chip
+//-------------------------------------------
+// Display current time read from the RTC module.
+void test_RTDS1307X()
+{
+  //rt1307.dispTimeHHMM_DS1307_4digit7Seg();
+}//test_RTDS1307X
+
+//-------------------------------------------
 // Real-time clock with DS3231 chip
 //-------------------------------------------
 // Display current time read from the RTC module.
 void test_RTX()
 {
-  rt.displayTime_4digit7seg();
+  //rt.displayTime_4digit7seg();
 }//test_RTX
 
 // Display temperature and humidity read from the DHT11 digital temperature & humidity sensor.
