@@ -294,8 +294,8 @@ void loop()
 
   int i; 
   //---- No RTC, so that manually set nightMode
-  //nightMode=true; 
-  nightMode=false;
+  nightMode=true; 
+  //nightMode=false;
   //---- No RTC, so that manually set nightMode (End)
   
   //*** Production system
@@ -377,7 +377,6 @@ void loop()
   //------ DHT11 Temperature & Humidity sensor (success as of Sun. Mar 24, 2019)
   //Show temperature(celcius) and humidity(relative %)
   displayTemp_4digit7seg();
-  
   //------ 4 digit 7 segment LED (success as of Sat. Mar 23, 2019)
   //show numbers from 0 to 9999
   //test0to9999();

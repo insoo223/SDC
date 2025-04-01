@@ -54,17 +54,17 @@ void test_trippleX_7segNum()
 // Display from A to Z and some movement action defined by Insoo
 void test_trippleX_7segChar()
 {
-  _7X.disp4chars("ABCD", 200);
-  _7X.disp4chars("EFGH", 200);
-  _7X.disp4chars("IJKL", 200);
-  _7X.disp4chars("MNOP", 200);
-  _7X.disp4chars("QRST", 200);
-  _7X.disp4chars("UVWX", 200);
-  _7X.disp4chars("YZAB", 200);
-  _7X.disp4chars(" FWD", 200); //forward
-  _7X.disp4chars(" BWD", 200); //backward
-  _7X.disp4chars("TNCK", 200); //turn clockwise
-  _7X.disp4chars("TNAC", 200); //turn anti-clockwise
+  _7X.disp4chars("ABCD", 200*8);
+  _7X.disp4chars("EFGH", 200*8);
+  _7X.disp4chars("IJKL", 200*8);
+  _7X.disp4chars("MNOP", 200*8);
+  _7X.disp4chars("QRST", 200*8);
+  _7X.disp4chars("UVWX", 200*8);
+  _7X.disp4chars("YZAB", 200*8);
+  _7X.disp4chars(" FWD", 200*8); //forward
+  _7X.disp4chars(" BWD", 200*8); //backward
+  _7X.disp4chars("TNCK", 200*8); //turn clockwise
+  _7X.disp4chars("TNAC", 200*8); //turn anti-clockwise
 }//test_trippleX_7segChar
 
 //-------------------------------------------

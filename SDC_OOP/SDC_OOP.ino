@@ -73,6 +73,6 @@ void loop()
   //Fucntions below can be applicable to SeeedStudio PCB (comments added on May 20, 2019)
   //test_L293DX(); 
   //test_trippleX_7segNum_UpsideDown();
-  //test_trippleX_7segChar();
+  test_trippleX_7segChar();
   //test_trippleX_7segNum();
 }//loop
