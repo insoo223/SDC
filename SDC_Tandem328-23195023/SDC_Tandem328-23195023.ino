@@ -294,7 +294,7 @@ void loop()
 
   int i; 
   //---- No RTC, so that manually set nightMode
-  nightMode=true; 
+  //nightMode=true; 
   //nightMode=false;
   //---- No RTC, so that manually set nightMode (End)
   
@@ -303,7 +303,7 @@ void loop()
   //playMain();
   //*** Production system (End)
   
-  //control74HC595(0,0,0);    
+  //control74HC595(,0,0);    
 
   //*** Test SDC
   //getPureIRsignal(true, true);
@@ -329,9 +329,13 @@ void loop()
   //------ CD4021 Input Expansion (success as of Tue. Apr 2, 2019)
   //------ 4021_DAT should connect to Q8 (pin3 of CD4021BE chip), NOT to Serial-In(pin11 of CD4021BE)
   // ref) https://www.arduino.cc/en/Tutorial/ShiftIn
-  //byte swByte;
-  //readCD4021BE(&swByte);
+  byte swByte; 
+  readCD4021BE(&swByte);
   //Serial.println(swByte , BIN);
+  if (swByte == 10)
+    nightMode=true; 
+  else
+    nightMode=false; 
   //delay(500);
   
   //testSingleReadCD4021BE();
