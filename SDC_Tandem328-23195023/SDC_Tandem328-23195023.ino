@@ -368,8 +368,8 @@ void loop()
 
   //------ RTC DS1307 (success as of Tue. Mar 26, 2019)
   //dispTimeYYYYMMDD_DS1307_4digit7Seg();
-  dispTimeHHMM_DS1307_4digit7Seg();
-  //loopDS1307_4digit7Seg(); // YYYY MM DD dd HH MM SS
+  //dispTimeHHMM_DS1307_4digit7Seg();
+  loopDS1307_4digit7Seg(); // YYYY MM DD dd HH MM SS
   //loopDS1307Serial();
   //------ RTC DS1307 (success as of Tue. Mar 26, 2019)(End)
 
